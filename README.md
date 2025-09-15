@@ -2,6 +2,9 @@
 
 A Next.js social discovery app that helps people find meaningful connections through shared interests. Users create taste profiles using various categories (music, movies, books, etc.) and get matched with like-minded individuals powered by AI.
 
+[![YouTube Demo](https://img.shields.io/badge/▶️%20Watch%20on%20YouTube-red?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=-JzRYZ-BcUg)
+[![Watch the demo](https://img.youtube.com/vi/-JzRYZ-BcUg/maxresdefault.jpg)](https://www.youtube.com/watch?v=-JzRYZ-BcUg)
+
 ## ✨ Features
 
 - **Smart Taste Profiling**: Multi-category interest input with chip-based UI
