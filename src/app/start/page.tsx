@@ -202,14 +202,28 @@ export default function Start() {
 			"building your page…",
 		]);
 		try {
-			const checkRes = await fetch("/api/check-user-id", {
+			const check = await fetch("/api/check-user-id", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ userId: u }),
-			});
-			if ((await checkRes.json()).exists) {
+			}).then((r) => r.json());
+			if (check.exists) {
+				if (check.claimable) {
+					// page predates auth — bind it to this account instead of creating
+					setLoadingMsgs(["claiming your page…"]);
+					const claimed = await authedFetch("/api/claim-account", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ username: u }),
+					}).then((r) => r.json());
+					if (claimed.success) {
+						setSessionUser(u);
+						router.push(`/u/${encodeURIComponent(u)}`);
+						return;
+					}
+				}
 				setLoadingMsgs(null);
-				return setError("that username is taken — pick another or log in");
+				return setError("that username is taken — pick another");
 			}
 
 			const expandRes = await fetch("/api/expand-tastes", {
