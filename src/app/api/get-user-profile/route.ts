@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { getSupabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -17,8 +13,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Get user profile
-		const { data: profile, error: profileError } = await supabase
-			.from("user_profiles")
+		const { data: profile, error: profileError } = await getSupabase().from("user_profiles")
 			.select("*")
 			.eq("user_id", userId)
 			.single();
@@ -31,8 +26,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Get user interests
-		const { data: interests, error: interestsError } = await supabase
-			.from("user_interests")
+		const { data: interests, error: interestsError } = await getSupabase().from("user_interests")
 			.select("*")
 			.eq("user_id", userId);
 
@@ -41,8 +35,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Get user insights
-		const { data: insights, error: insightsError } = await supabase
-			.from("user_insights")
+		const { data: insights, error: insightsError } = await getSupabase().from("user_insights")
 			.select("*")
 			.eq("user_id", userId);
 
@@ -54,10 +47,10 @@ export async function POST(request: NextRequest) {
 		const organizedInterests: Record<string, string[]> = {};
 		if (interests) {
 			interests.forEach((interest) => {
-				if (!organizedInterests[interest.interest_type]) {
-					organizedInterests[interest.interest_type] = [];
+				if (!organizedInterests[interest.category]) {
+					organizedInterests[interest.category] = [];
 				}
-				organizedInterests[interest.interest_type].push(interest.interest_name);
+				organizedInterests[interest.category].push(interest.interest_name);
 			});
 		}
 

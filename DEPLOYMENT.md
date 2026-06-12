@@ -21,8 +21,7 @@
 2. Add each environment variable:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `QLOO_API_KEY`
+   - `ANTHROPIC_API_KEY`
 
 ### 4. Deploy
 
@@ -55,7 +54,7 @@
 ### 2. API Rate Limiting
 
 - Consider adding rate limiting to your API endpoints
-- Monitor Qloo API usage
+- Monitor Anthropic API usage
 - Implement caching for expensive operations
 
 ### 3. Performance

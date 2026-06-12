@@ -82,9 +82,6 @@ const ChipInput: React.FC<ChipInputProps> = ({
 		}
 	};
 
-	// className =
-	// 	"px-6 py-2.5 text-sm md:text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg text-white disabled:opacity-50 transition-transform transform hover:scale-105 active:scale-95";
-
 	return (
 		<div
 			className={`min-h-[42px] p-2 border rounded-md bg-slate-700 border-slate-600 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 hover:border-blue-400 transition-all duration-200 ${className}`}
@@ -208,6 +205,24 @@ const getTypeEmoji = (type: string) => {
 	return emojiMap[type] || "⭐";
 };
 
+// Expand raw interests into related entities via Claude (replaces the old Qloo pipeline)
+async function expandTastes(
+	interests: Record<string, string[]>
+): Promise<Record<string, InsightItem[]>> {
+	try {
+		const res = await fetch("/api/expand-tastes", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ interests }),
+		});
+		const json = await res.json();
+		return json.data || {};
+	} catch (error) {
+		console.error("Error expanding tastes:", error);
+		return {};
+	}
+}
+
 const getPlaceholder = (type: string) => {
 	const placeholders: Record<string, string> = {
 		artist: "The Beatles, Taylor Swift, Drake",
@@ -233,7 +248,6 @@ const getPlaceholder = (type: string) => {
 
 export default function ProfileForm() {
 	const [showWelcome, setShowWelcome] = useState(true);
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [showLogin, setShowLogin] = useState(false);
 	const [showUserProfile, setShowUserProfile] = useState(false);
 	const [loginUserId, setLoginUserId] = useState("");
@@ -241,18 +255,11 @@ export default function ProfileForm() {
 	const [userProfileData, setUserProfileData] =
 		useState<UserProfileData | null>(null);
 	const [formData, setFormData] = useState<Record<string, string[]>>({});
-	const [insightResults, setInsightResults] = useState<
-		Record<string, InsightItem[]> & { aiProfile?: AIProfile }
-	>({});
 	const [userId, setUserId] = useState<string>("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [profileSaved, setProfileSaved] = useState(false);
 	const [matches, setMatches] = useState<Match[]>([]);
 	const [loadingMatches, setLoadingMatches] = useState(false);
-	const [showProfile, setShowProfile] = useState(false);
-	const [editingUserId, setEditingUserId] = useState(false);
-	const [newUserId, setNewUserId] = useState("");
-	const [userIdError, setUserIdError] = useState("");
 	const [connectionUserId, setConnectionUserId] = useState("");
 	const [connectionUserIdError, setConnectionUserIdError] = useState("");
 	const [contactInfo, setContactInfo] = useState("");
@@ -260,40 +267,6 @@ export default function ProfileForm() {
 	const [generatingUsername, setGeneratingUsername] = useState(false);
 	const [bulkInput, setBulkInput] = useState("");
 	const [showBulkInput, setShowBulkInput] = useState(false);
-
-	// Safe wrapper for setInsightResults to prevent error objects from being set
-	const safeSetInsightResults = (
-		data: Record<string, InsightItem[]> & { aiProfile?: AIProfile }
-	) => {
-		// If setting aiProfile, validate the structure
-		if (data && data.aiProfile) {
-			const aiProfile = data.aiProfile;
-
-			// Check if this looks like a database error object
-			if (
-				"code" in aiProfile &&
-				"details" in aiProfile &&
-				"message" in aiProfile
-			) {
-				console.error(
-					"🚨 PREVENTED ERROR OBJECT from being set as aiProfile:",
-					aiProfile
-				);
-				return; // Don't set the error object
-			}
-
-			// Check if it has the expected profile structure
-			if (!aiProfile.headline || typeof aiProfile.headline !== "string") {
-				console.error(
-					"🚨 INVALID aiProfile structure, missing headline:",
-					aiProfile
-				);
-				return; // Don't set invalid structure
-			}
-		}
-
-		setInsightResults(data);
-	};
 
 	const handleChange = useCallback((type: string, values: string[]) => {
 		setFormData((prevFormData) => ({ ...prevFormData, [type]: values }));
@@ -320,7 +293,6 @@ export default function ProfileForm() {
 			if (result.success && result.data) {
 				setUserId(loginUserId);
 				setUserProfileData(result.data);
-				setIsLoggedIn(true);
 				setShowLogin(false);
 				setShowWelcome(false);
 				setShowUserProfile(true);
@@ -365,6 +337,7 @@ export default function ProfileForm() {
 								},
 								body: JSON.stringify({
 									currentUserInterests: formData,
+									currentUserId: connectionUserId.trim() || userId,
 									matchUserProfile: match.user,
 									sharedEntities: match.sharedEntities,
 									matchScore: match.matchScore,
@@ -401,7 +374,6 @@ export default function ProfileForm() {
 			);
 
 			setMatches(matchesWithBlurbs);
-			safeSetInsightResults({}); // Close the AI profile display
 		} catch (error) {
 			console.error("Error finding matches:", error);
 		} finally {
@@ -565,47 +537,6 @@ Please respond with ONLY the username, nothing else.`;
 		}
 	};
 
-	const handleUserIdUpdate = async () => {
-		if (!newUserId.trim()) {
-			setUserIdError("User ID cannot be empty");
-			return;
-		}
-
-		if (newUserId === userId) {
-			setEditingUserId(false);
-			setUserIdError("");
-			return;
-		}
-
-		const isUnique = await checkUserIdUnique(newUserId);
-		if (!isUnique) {
-			setUserIdError("This User ID is already taken");
-			return;
-		}
-
-		try {
-			const response = await fetch("/api/update-user-id", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ oldUserId: userId, newUserId }),
-			});
-
-			const result = await response.json();
-			if (result.success) {
-				setUserId(newUserId);
-				setEditingUserId(false);
-				setUserIdError("");
-			} else {
-				setUserIdError(result.error || "Failed to update User ID");
-			}
-		} catch (error) {
-			console.error("Error updating user ID:", error);
-			setUserIdError("Failed to update User ID");
-		}
-	};
-
 	const handleUpdateProfile = async () => {
 		if (!userId) {
 			console.error("No user ID available for update");
@@ -615,55 +546,7 @@ Please respond with ONLY the username, nothing else.`;
 		setIsLoading(true);
 
 		try {
-			const resolvedEntities: Record<string, InsightItem[]> = {};
-			const insightMap: Record<string, InsightItem[]> = {};
-
-			// Process Qloo API calls for updated interests
-			for (const type of QLOO_TYPES) {
-				const values = formData[type];
-				if (!values || values.length === 0) continue;
-
-				const typeEntities: InsightItem[] = [];
-				const typeInsights: InsightItem[] = [];
-
-				// Process each value in the array
-				for (const value of values) {
-					const res = await fetch("/api/qloo-search", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ query: value, type }),
-					});
-
-					const json = await res.json();
-					const entity = json.data?.results?.[0];
-					if (entity) {
-						typeEntities.push(entity);
-
-						if (entity?.entity_id) {
-							const insightRes = await fetch("/api/qloo-insights", {
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({
-									entityId: entity.entity_id,
-									type,
-									filterType: "brand",
-									take: 5,
-								}),
-							});
-							const insights = await insightRes.json();
-							const insightResults = insights?.data?.results?.entities ?? [];
-							if (Array.isArray(insightResults)) {
-								typeInsights.push(...insightResults);
-							}
-						}
-					}
-				}
-
-				if (typeEntities.length > 0) {
-					resolvedEntities[type] = typeEntities;
-					insightMap[type] = typeInsights;
-				}
-			}
+			const insightMap = await expandTastes(formData);
 
 			// Update existing profile using the update endpoint
 			const updateResponse = await fetch("/api/update-user-profile", {
@@ -678,9 +561,7 @@ Please respond with ONLY the username, nothing else.`;
 
 			const updateResult = await updateResponse.json();
 
-			if (updateResult.success) {
-				setShowProfile(false);
-			} else {
+			if (!updateResult.success) {
 				console.error("Failed to update profile. Full response:", updateResult);
 				console.error(
 					"Error details:",
@@ -706,61 +587,19 @@ Please respond with ONLY the username, nothing else.`;
 		setIsLoading(true);
 
 		try {
-			const resolvedEntities: Record<string, InsightItem[]> = {};
-			const insightMap: Record<string, InsightItem[]> = {};
-
-			// Process Qloo API calls as before
-			for (const type of QLOO_TYPES) {
-				const values = formData[type];
-				if (!values || values.length === 0) continue;
-
-				const typeEntities: InsightItem[] = [];
-				const typeInsights: InsightItem[] = [];
-
-				// Process each value in the array
-				for (const value of values) {
-					const res = await fetch("/api/qloo-search", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ query: value, type }),
-					});
-
-					const json = await res.json();
-					const entity = json.data?.results?.[0];
-					if (entity) {
-						typeEntities.push(entity);
-
-						if (entity?.entity_id) {
-							const insightRes = await fetch("/api/qloo-insights", {
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({
-									entityId: entity.entity_id,
-									type,
-									filterType: "brand", // Can be made dynamic later
-									take: 5,
-								}),
-							});
-							const insights = await insightRes.json();
-							const insightResults = insights?.data?.results?.entities ?? [];
-							// Ensure insightResults is an array before spreading
-							if (Array.isArray(insightResults)) {
-								typeInsights.push(...insightResults);
-							} else {
-								console.warn(
-									`Insights results is not an array for ${type}:`,
-									insightResults
-								);
-							}
-						}
-					}
-				}
-
-				if (typeEntities.length > 0) {
-					resolvedEntities[type] = typeEntities;
-					insightMap[type] = typeInsights;
+			// Make sure the chosen username isn't taken before doing the heavy work
+			if (connectionUserId.trim()) {
+				const isUnique = await checkUserIdUnique(connectionUserId.trim());
+				if (!isUnique) {
+					setConnectionUserIdError(
+						"This username is already taken. Pick another or log in with it."
+					);
+					setIsLoading(false);
+					return;
 				}
 			}
+
+			const insightMap = await expandTastes(formData);
 
 			// Save to database
 			const saveResponse = await fetch("/api/save-profile", {
@@ -780,8 +619,6 @@ Please respond with ONLY the username, nothing else.`;
 				setUserId(saveResult.data.userId);
 				setProfileSaved(true);
 
-				// Set logged-in state and load user profile data
-				setIsLoggedIn(true);
 				try {
 					const profileResponse = await fetch("/api/get-user-profile", {
 						method: "POST",
@@ -838,36 +675,6 @@ Please respond with ONLY the username, nothing else.`;
 
 	return (
 		<div className="h-screen w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-			{/* Global scrollbar theming */}
-			<style
-				dangerouslySetInnerHTML={{
-					__html: `
-					/* Global scrollbar styles */
-					* {
-						scrollbar-width: thin;
-						scrollbar-color: rgb(71 85 105) rgb(30 41 59);
-					}
-					*::-webkit-scrollbar {
-						width: 8px;
-						height: 8px;
-					}
-					*::-webkit-scrollbar-track {
-						background: rgb(30 41 59);
-						border-radius: 4px;
-					}
-					*::-webkit-scrollbar-thumb {
-						background: rgb(71 85 105);
-						border-radius: 4px;
-					}
-					*::-webkit-scrollbar-thumb:hover {
-						background: rgb(100 116 139);
-					}
-					*::-webkit-scrollbar-corner {
-						background: rgb(30 41 59);
-					}
-				`,
-				}}
-			/>
 			{/* Subtle background elements */}
 			<div className="absolute inset-0 overflow-hidden">
 				<motion.div
@@ -901,7 +708,6 @@ Please respond with ONLY the username, nothing else.`;
 					onGetStarted={() => {
 						// Clear form data for fresh profile creation
 						setFormData({});
-						setInsightResults({});
 						setUserId("");
 						setProfileSaved(false);
 						setShowWelcome(false);
@@ -944,13 +750,11 @@ Please respond with ONLY the username, nothing else.`;
 					isLoading={isLoading}
 					onLogout={() => {
 						// Clear all data for clean session
-						setIsLoggedIn(false);
 						setShowUserProfile(false);
 						setShowWelcome(true);
 						setUserId("");
 						setUserProfileData(null);
 						setFormData({});
-						setInsightResults({});
 						setMatches([]);
 						setProfileSaved(false);
 					}}
@@ -958,15 +762,11 @@ Please respond with ONLY the username, nothing else.`;
 			) : (
 				<ProfileFormScreen
 					formData={formData}
-					insightResults={insightResults}
 					handleChange={handleChange}
 					handleSubmit={handleSubmit}
-					setInsightResults={safeSetInsightResults}
 					isLoading={isLoading}
 					profileSaved={profileSaved}
 					userId={userId}
-					findMatches={findMatches}
-					loadingMatches={loadingMatches}
 					connectionUserId={connectionUserId}
 					setConnectionUserId={setConnectionUserId}
 					connectionUserIdError={connectionUserIdError}
@@ -1016,12 +816,12 @@ const WelcomeScreen = ({
 
 					{/* Main Heading */}
 					<h1 className="text-5xl md:text-6xl font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-400 to-orange-300 bg-clip-text text-transparent font-heading drop-shadow-[0_2px_12px_rgba(80,0,180,0.25)]">
-						KindredAI
+						Mutuals
 					</h1>
 
 					{/* Subheadline */}
 					<p className="text-xl md:text-2xl text-slate-200 mb-1 font-medium tracking-wide font-sans">
-						AI that finds your kind
+						Find people who love what you love
 					</p>
 
 					{/* Description */}
@@ -1729,33 +1529,7 @@ const UserProfileScreen = ({
 												</div>
 											</div>
 
-											<div
-												className="flex-1 overflow-y-auto pr-1 taste-profile-scroll"
-												style={{
-													scrollbarWidth: "thin",
-													scrollbarColor: "rgb(71 85 105) rgb(30 41 59)",
-												}}
-											>
-												<style
-													dangerouslySetInnerHTML={{
-														__html: `
-          .taste-profile-scroll::-webkit-scrollbar {
-            width: 5px;
-          }
-          .taste-profile-scroll::-webkit-scrollbar-track {
-            background: rgb(30 41 59);
-            border-radius: 3px;
-          }
-          .taste-profile-scroll::-webkit-scrollbar-thumb {
-            background: rgb(71 85 105);
-            border-radius: 3px;
-          }
-          .taste-profile-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgb(100 116 139);
-          }
-        `,
-													}}
-												/>
+											<div className="flex-1 overflow-y-auto pr-1">
 												{tasteProfile ? (
 													<div className="space-y-3 text-sm">
 														{/* Headline */}
@@ -1992,17 +1766,11 @@ const UserProfileScreen = ({
 
 interface ProfileFormScreenProps {
 	formData: Record<string, string[]>;
-	insightResults: Record<string, InsightItem[]> & { aiProfile?: AIProfile };
 	handleChange: (type: string, values: string[]) => void;
 	handleSubmit: (e: React.FormEvent) => Promise<void>;
-	setInsightResults: (
-		results: Record<string, InsightItem[]> & { aiProfile?: AIProfile }
-	) => void;
 	isLoading: boolean;
 	profileSaved: boolean;
 	userId: string;
-	findMatches: () => Promise<void>;
-	loadingMatches: boolean;
 	connectionUserId: string;
 	setConnectionUserId: (value: string) => void;
 	connectionUserIdError: string;
@@ -2022,15 +1790,11 @@ interface ProfileFormScreenProps {
 
 const ProfileFormScreen = ({
 	formData,
-	insightResults,
 	handleChange,
 	handleSubmit,
-	setInsightResults,
 	isLoading,
 	profileSaved,
 	userId,
-	findMatches,
-	loadingMatches,
 	connectionUserId,
 	setConnectionUserId,
 	connectionUserIdError,
@@ -2068,18 +1832,11 @@ const ProfileFormScreen = ({
 							<div className="text-center mb-6 flex flex-col items-center justify-center">
 								<div className="relative inline-block px-4 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full border border-blue-600/40 backdrop-blur-sm shadow-inner mb-2 animate-fade-in">
 									<span className="text-sm md:text-base font-medium text-blue-300">
-										<a
-											href="https://www.qloo.com/"
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-sm md:text-base font-medium text-blue-300 hover:underline"
-										>
-											✨ Powered by QLOO ✨
-										</a>
+										✨ Powered by Claude ✨
 									</span>
 								</div>
 								<h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight font-heading">
-									Build Your KindredAI Profile
+									Build Your Taste Profile
 								</h2>
 								<p className="text-sm text-slate-400 mt-1">
 									Share your interests to help us find your perfect connections.
@@ -2087,34 +1844,7 @@ const ProfileFormScreen = ({
 							</div>
 
 							{/* Scrollable Section */}
-							<div
-								className="flex-1 overflow-y-auto pr-1 min-h-0 max-h-[calc(100vh-400px)] scrollbar-container"
-								style={{
-									scrollbarWidth: "thin",
-									scrollbarColor: "rgb(71 85 105) rgb(30 41 59)",
-								}}
-							>
-								<style
-									dangerouslySetInnerHTML={{
-										__html: `
-				.scrollbar-container::-webkit-scrollbar {
-				  width: 6px;
-				}
-				.scrollbar-container::-webkit-scrollbar-track {
-				  background: rgb(30 41 59);
-				  border-radius: 3px;
-				}
-				.scrollbar-container::-webkit-scrollbar-thumb {
-				  background: rgb(71 85 105);
-				  border-radius: 3px;
-				}
-				.scrollbar-container::-webkit-scrollbar-thumb:hover {
-				  background: rgb(100 116 139);
-				}
-			  `,
-									}}
-								/>
-
+							<div className="flex-1 overflow-y-auto pr-1 min-h-0 max-h-[calc(100vh-400px)]">
 								{/* Quick Fill */}
 								<div className="mb-6 border-b border-slate-600 pb-6">
 									<div className="flex items-center justify-between mb-3">

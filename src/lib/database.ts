@@ -1,4 +1,4 @@
-import { supabase, UserInterest, UserInsight, InsightItem } from "./supabase";
+import { getSupabase, UserInterest, UserInsight, InsightItem } from "./supabase";
 
 // Generate a unique user ID (in a real app, this would come from authentication)
 export const generateUserId = () => {
@@ -8,7 +8,7 @@ export const generateUserId = () => {
 // Check if a user ID is already taken
 export const checkUserIdExists = async (userId: string) => {
 	try {
-		const { data, error } = await supabase
+		const { data, error } = await getSupabase()
 			.from("user_profiles")
 			.select("user_id")
 			.eq("user_id", userId)
@@ -26,46 +26,6 @@ export const checkUserIdExists = async (userId: string) => {
 	}
 };
 
-// Update user ID for an existing profile
-export const updateUserId = async (oldUserId: string, newUserId: string) => {
-	try {
-		// Check if new user ID is already taken
-		const { exists } = await checkUserIdExists(newUserId);
-		if (exists) {
-			return { success: false, error: "User ID already taken" };
-		}
-
-		// Update user_profiles table
-		const { error: profileError } = await supabase
-			.from("user_profiles")
-			.update({ user_id: newUserId })
-			.eq("user_id", oldUserId);
-
-		if (profileError) throw profileError;
-
-		// Update user_interests table
-		const { error: interestsError } = await supabase
-			.from("user_interests")
-			.update({ user_id: newUserId })
-			.eq("user_id", oldUserId);
-
-		if (interestsError) throw interestsError;
-
-		// Update user_insights table
-		const { error: insightsError } = await supabase
-			.from("user_insights")
-			.update({ user_id: newUserId })
-			.eq("user_id", oldUserId);
-
-		if (insightsError) throw insightsError;
-
-		return { success: true, error: null };
-	} catch (error) {
-		console.error("Error updating user ID:", error);
-		return { success: false, error };
-	}
-};
-
 // Save user profile with interests and insights
 export const saveUserProfile = async (
 	userId: string,
@@ -75,7 +35,7 @@ export const saveUserProfile = async (
 ) => {
 	try {
 		// First, save the main profile
-		const { data: profile, error: profileError } = await supabase
+		const { data: profile, error: profileError } = await getSupabase()
 			.from("user_profiles")
 			.upsert({
 				user_id: userId,
@@ -104,10 +64,10 @@ export const saveUserProfile = async (
 
 		if (interestRecords.length > 0) {
 			// Delete existing interests for this user first
-			await supabase.from("user_interests").delete().eq("user_id", userId);
+			await getSupabase().from("user_interests").delete().eq("user_id", userId);
 
 			// Insert new interests
-			const { error: interestsError } = await supabase
+			const { error: interestsError } = await getSupabase()
 				.from("user_interests")
 				.insert(interestRecords);
 
@@ -125,17 +85,17 @@ export const saveUserProfile = async (
 					entity_id: insight.entity_id,
 					entity_name: insight.name,
 					popularity_score: insight.popularity || 0,
-					metadata: { source: "qloo" },
+					metadata: { source: "ai" },
 				});
 			});
 		});
 
 		if (insightRecords.length > 0) {
 			// Delete existing insights for this user first
-			await supabase.from("user_insights").delete().eq("user_id", userId);
+			await getSupabase().from("user_insights").delete().eq("user_id", userId);
 
 			// Insert new insights
-			const { error: insightsError } = await supabase
+			const { error: insightsError } = await getSupabase()
 				.from("user_insights")
 				.insert(insightRecords);
 
@@ -149,44 +109,6 @@ export const saveUserProfile = async (
 	}
 };
 
-// Get user profile by ID
-export const getUserProfile = async (userId: string) => {
-	try {
-		const { data: profile, error: profileError } = await supabase
-			.from("user_profiles")
-			.select("*")
-			.eq("user_id", userId)
-			.single();
-
-		if (profileError) throw profileError;
-
-		const { data: interests, error: interestsError } = await supabase
-			.from("user_interests")
-			.select("*")
-			.eq("user_id", userId);
-
-		if (interestsError) throw interestsError;
-
-		const { data: insights, error: insightsError } = await supabase
-			.from("user_insights")
-			.select("*")
-			.eq("user_id", userId);
-
-		if (insightsError) throw insightsError;
-
-		return {
-			success: true,
-			profile,
-			interests,
-			insights,
-		};
-	} catch (error) {
-		console.error("Error fetching user profile:", error);
-		return { success: false, error };
-	}
-};
-
-// Find similar users based on interests
 // Jaccard similarity calculation
 const jaccard = (setA: Set<string>, setB: Set<string>): number => {
 	if (setA.size === 0 && setB.size === 0) return 1;
@@ -221,7 +143,7 @@ const TYPE_WEIGHTS: Record<string, number> = {
 export const findSimilarUsers = async (userId: string) => {
 	try {
 		// Get current user's profile and interests
-		const { data: currentUserProfile, error: profileError } = await supabase
+		const { data: currentUserProfile, error: profileError } = await getSupabase()
 			.from("user_profiles")
 			.select("*")
 			.eq("user_id", userId)
@@ -230,7 +152,7 @@ export const findSimilarUsers = async (userId: string) => {
 		if (profileError) throw profileError;
 
 		// Get all other users with their profiles and interests
-		const { data: otherUsers, error: usersError } = await supabase
+		const { data: otherUsers, error: usersError } = await getSupabase()
 			.from("user_profiles")
 			.select(
 				`
@@ -346,10 +268,16 @@ export const findSimilarUsers = async (userId: string) => {
 				matches.push({
 					user: {
 						user_id: otherUser.user_id,
-						name: `User ${otherUser.user_id.slice(-4)}`, // Placeholder name
-						location: "🌍", // Placeholder
-						bio: "Music lover, movie enthusiast, always exploring new places", // Placeholder
-						ai_profile: otherUser.ai_profile || null,
+						emoji: otherUser.emoji || null,
+						ai_profile: otherUser.taste_profile_headline
+							? {
+									headline: otherUser.taste_profile_headline,
+									description: otherUser.taste_profile_description,
+									vibe: otherUser.taste_profile_vibe,
+									traits: otherUser.taste_profile_traits || [],
+									compatibility: otherUser.taste_profile_compatibility,
+							  }
+							: null,
 					},
 					matchScore: Math.min(matchScore + bonus, 1), // Cap at 1.0
 					sharedFields,
@@ -395,7 +323,7 @@ export const saveTasteProfile = async (
 	}
 ) => {
 	try {
-		const { data, error } = await supabase
+		const { data, error } = await getSupabase()
 			.from("user_profiles")
 			.update({
 				taste_profile_headline: tasteProfile.headline,
@@ -422,7 +350,7 @@ export const saveTasteProfile = async (
 // Get taste profile from database
 export const getTasteProfile = async (userId: string) => {
 	try {
-		const { data, error } = await supabase
+		const { data, error } = await getSupabase()
 			.from("user_profiles")
 			.select(
 				`

@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateText, parseJson } from "@/lib/claude";
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const FALLBACK_PROFILE = {
+	headline: "The Taste Explorer",
+	description:
+		"Someone with unique and diverse interests who loves discovering new experiences across different categories.",
+	vibe: "Eclectic",
+	traits: ["Curious", "Open-minded", "Adventurous", "Creative"],
+	compatibility:
+		"You'd connect well with fellow explorers who appreciate diversity in culture, art, and experiences.",
+	emoji: "🌟",
+};
 
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-
 		const {
 			interests,
 			insights,
@@ -17,12 +24,22 @@ export async function POST(request: NextRequest) {
 
 		if (!interests || Object.keys(interests).length === 0) {
 			return NextResponse.json(
-				{
-					success: false,
-					message: "Interests data is required",
-				},
+				{ success: false, message: "Interests data is required" },
 				{ status: 400 }
 			);
+		}
+
+		if (generateUsernameOnly && customPrompt) {
+			const text = await generateText(customPrompt, 64);
+			const username = text
+				.trim()
+				.replace(/[^a-zA-Z0-9_]/g, "")
+				.substring(0, 15);
+			return NextResponse.json({
+				success: true,
+				message: "Username generated successfully",
+				data: username,
+			});
 		}
 
 		const insightsText = Object.entries(insights || {})
@@ -36,11 +53,6 @@ export async function POST(request: NextRequest) {
 			})
 			.join("\n");
 
-		// Count interests to understand the user's breadth
-		const totalInterests = Object.values(interests).flat().length;
-		const categoryCount = Object.keys(interests).length;
-
-		// Extract specific examples for more context
 		const specificInterests = Object.entries(interests)
 			.filter(([, values]) => Array.isArray(values) && values.length > 0)
 			.map(([category, values]) => ({
@@ -49,12 +61,12 @@ export async function POST(request: NextRequest) {
 				count: (values as string[]).length,
 			}));
 
-		// Create unique identifiers based on their specific interests
+		const totalInterests = Object.values(interests).flat().length;
+		const categoryCount = Object.keys(interests).length;
 		const dominantCategories = specificInterests
 			.sort((a, b) => b.count - a.count)
 			.slice(0, 3)
 			.map((cat) => cat.category);
-
 		const uniqueCombination = specificInterests
 			.flatMap((cat) => cat.items)
 			.slice(0, 8)
@@ -97,67 +109,20 @@ Generate a JSON response with these fields:
   "emoji": "A single emoji character (exactly 1) that represents THEIR unique combination, not just one category"
 }
 
-CRITICAL: Make this feel like a custom-written profile, not a template. Reference their specific taste combination.`;
+CRITICAL: Make this feel like a custom-written profile, not a template. Respond with ONLY the JSON object.`;
 
-		// Validate genAI instance
-		if (!genAI) {
-			throw new Error("Failed to initialize Google Generative AI instance");
-		}
-
-		// Get AI model
-		const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-		if (!model) {
-			throw new Error("Failed to get AI model");
-		}
-
-		// Generate content
-		const result = await model.generateContent(prompt);
-
-		const response = await result.response;
-
-		const text = response.text();
-
-		// Parse the response
 		let profileData;
-
-		if (generateUsernameOnly) {
-			// For username generation, just return the text response
-			profileData = text
-				.trim()
-				.replace(/[^a-zA-Z0-9_]/g, "")
-				.substring(0, 15);
-		} else {
-			// For profile generation, parse JSON
-			try {
-				// Extract JSON from the response (in case there's extra text)
-				const jsonMatch = text.match(/\{[\s\S]*\}/);
-				if (jsonMatch) {
-					profileData = JSON.parse(jsonMatch[0]);
-				} else {
-					throw new Error("No JSON found in response");
-				}
-			} catch (parseError) {
-				console.error("Failed to parse AI response:", parseError);
-				console.error("Raw AI response:", text);
-
-				// Fallback profile if AI response can't be parsed
-				profileData = {
-					headline: "The Taste Explorer",
-					description:
-						"Someone with unique and diverse interests who loves discovering new experiences across different categories.",
-					vibe: "Eclectic",
-					traits: ["Curious", "Open-minded", "Adventurous", "Creative"],
-					compatibility:
-						"You'd connect well with fellow explorers who appreciate diversity in culture, art, and experiences.",
-					emoji: "🌟",
-				};
-			}
+		try {
+			const text = await generateText(prompt, 1024);
+			profileData = parseJson<typeof FALLBACK_PROFILE>(text);
+		} catch (parseError) {
+			console.error("Failed to generate/parse AI profile:", parseError);
+			profileData = FALLBACK_PROFILE;
 		}
 
-		// Ensure emoji is only 1 character
-		if (profileData?.emoji && profileData.emoji.length > 1) {
-			profileData.emoji = profileData.emoji[0];
+		// Keep emoji to a single grapheme (emoji can be 2 UTF-16 code units)
+		if (profileData?.emoji) {
+			profileData.emoji = [...profileData.emoji].slice(0, 2).join("");
 		}
 
 		return NextResponse.json({
@@ -166,32 +131,11 @@ CRITICAL: Make this feel like a custom-written profile, not a template. Referenc
 			data: profileData,
 		});
 	} catch (error) {
-		console.error("❌ Error in /api/generate-profile:");
-		console.error("Error type:", typeof error);
-		console.error(
-			"Error message:",
-			error instanceof Error ? error.message : String(error)
-		);
-		console.error(
-			"Error stack:",
-			error instanceof Error ? error.stack : "No stack trace"
-		);
-		console.error("Full error object:", error);
-
-		// Return a fallback response if AI fails
+		console.error("Error in /api/generate-profile:", error);
 		return NextResponse.json({
 			success: true,
 			message: "Profile generated successfully",
-			data: {
-				headline: "The Unique Individual",
-				description:
-					"Someone with distinctive tastes and interests who brings a fresh perspective to any conversation.",
-				vibe: "Authentic",
-				traits: ["Genuine", "Interesting", "Thoughtful", "Creative"],
-				compatibility:
-					"You'd connect well with people who appreciate authenticity and diverse interests.",
-				emoji: "✨",
-			},
+			data: FALLBACK_PROFILE,
 		});
 	}
 }

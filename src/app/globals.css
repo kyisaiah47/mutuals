@@ -121,6 +121,30 @@
 	}
 }
 
+/* Themed scrollbars to match the dark UI */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: rgb(71 85 105) rgb(30 41 59);
+}
+*::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+*::-webkit-scrollbar-track {
+	background: rgb(30 41 59);
+	border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb {
+	background: rgb(71 85 105);
+	border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+	background: rgb(100 116 139);
+}
+*::-webkit-scrollbar-corner {
+	background: rgb(30 41 59);
+}
+
 @keyframes gradient-x {
 	0%,
 	100% {

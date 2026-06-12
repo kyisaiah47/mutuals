@@ -2,9 +2,9 @@
 
 <img src="assets/banner.png" alt="banner" width="100%" />
 
-# 🎭 KindredAI
+# 🤝 Mutuals
 
-**Find your people by taste — AI-powered social matching through music, films, and culture**
+**Find people who love what you love — AI-powered friend discovery through music, films, and culture**
 
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
@@ -16,12 +16,12 @@
 
 <br/>
 
-KindredAI uses [Qloo's Taste AI](https://qloo.com) to build rich cultural fingerprints from your favorite music, movies, books, places, and more. Rather than matching on demographics or surface-level bios, it surfaces connections grounded in genuine shared taste — so every match reflects something real about who you are. The result is social discovery that feels less like a form and more like finding your people.
+Mutuals uses [Claude](https://claude.com) to build rich cultural fingerprints from your favorite music, movies, books, places, and more. Rather than matching on demographics or surface-level bios, it surfaces connections grounded in genuine shared taste — so every match reflects something real about who you are. The result is social discovery that feels less like a form and more like finding your people.
 
 ## ✨ Features
 
 - **Smart Taste Profiling** — Multi-category interest input with chip-based UI across music, films, books, places, brands, and games
-- **Qloo Taste AI Matching** — Qloo's entity intelligence surfaces semantically similar users, not just exact-keyword overlaps
+- **AI Taste Expansion** — Claude expands each interest into related entities, so matching finds semantically similar users, not just exact-keyword overlaps
 - **Social Discovery Feed** — Browse matched users ranked by taste affinity and explore their cultural profiles
 - **Chip Input System** — Comma, space, tab, and enter separators with real-time deduplication and smooth animations
 - **Dark-first UI** — Polished dark theme built with shadcn/ui, Tailwind CSS, and Framer Motion transitions
@@ -35,7 +35,7 @@ KindredAI uses [Qloo's Taste AI](https://qloo.com) to build rich cultural finger
 
 ## 🛠️ Tech Stack
 
-Next.js 15 · TypeScript · Qloo Taste AI · Supabase (PostgreSQL) · shadcn/ui · Tailwind CSS · Framer Motion
+Next.js 15 · TypeScript · Claude (Anthropic API) · Supabase (PostgreSQL) · shadcn/ui · Tailwind CSS · Framer Motion
 
 ## 🚀 Getting Started
 
@@ -48,13 +48,12 @@ npm install
 **2. Configure environment variables**
 
 ```bash
-# Qloo API
-QLOO_API_KEY=your_qloo_api_key
+# Anthropic (Claude) API
+ANTHROPIC_API_KEY=your_anthropic_api_key
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 **3. Set up the database**

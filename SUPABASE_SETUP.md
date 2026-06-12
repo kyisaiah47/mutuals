@@ -31,11 +31,10 @@
 ```bash
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://yourproject.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_publishable_or_anon_key
 
-# Qloo API (already configured)
-QLOO_API_KEY=ekaFl8bH2Sm_QVKW1tpGXcdGvMXa9_U3mWHhUOmsalE
+# Anthropic (Claude) API
+ANTHROPIC_API_KEY=your_anthropic_api_key
 ```
 
 ### 5. Test the Integration
@@ -59,7 +58,7 @@ QLOO_API_KEY=ekaFl8bH2Sm_QVKW1tpGXcdGvMXa9_U3mWHhUOmsalE
 
 ### `user_insights`
 
-- Qloo API recommendations for each user
+- AI taste-expansion recommendations for each user
 - Includes popularity scores and metadata
 
 ## 🔒 Security
@@ -72,7 +71,7 @@ QLOO_API_KEY=ekaFl8bH2Sm_QVKW1tpGXcdGvMXa9_U3mWHhUOmsalE
 
 ### `/api/save-profile`
 
-- Saves user interests and Qloo insights to database
+- Saves user interests and AI taste insights to database
 - Returns a unique user ID
 
 ### `/api/find-matches`

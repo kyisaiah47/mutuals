@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-	supabase,
+	getSupabase,
 	UserInterest,
 	UserInsight,
 	InsightItem,
@@ -41,8 +41,7 @@ export async function POST(request: NextRequest) {
 				updateData.insights = insights;
 			}
 
-			const { data: profile, error: profileError } = await supabase
-				.from("user_profiles")
+			const { data: profile, error: profileError } = await getSupabase().from("user_profiles")
 				.update(updateData)
 				.eq("user_id", userId)
 				.select()
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
 			// If interests were updated, also update the user_interests table
 			if (interests) {
 				// Delete existing interests for this user
-				await supabase.from("user_interests").delete().eq("user_id", userId);
+				await getSupabase().from("user_interests").delete().eq("user_id", userId);
 
 				// Insert new interests
 				const interestRecords: Omit<UserInterest, "id" | "created_at">[] = [];
@@ -82,8 +81,7 @@ export async function POST(request: NextRequest) {
 				);
 
 				if (interestRecords.length > 0) {
-					const { error: interestsError } = await supabase
-						.from("user_interests")
+					const { error: interestsError } = await getSupabase().from("user_interests")
 						.insert(interestRecords);
 
 					if (interestsError) {
@@ -95,7 +93,7 @@ export async function POST(request: NextRequest) {
 			// If insights were updated, also update the user_insights table
 			if (insights) {
 				// Delete existing insights for this user
-				await supabase.from("user_insights").delete().eq("user_id", userId);
+				await getSupabase().from("user_insights").delete().eq("user_id", userId);
 
 				// Insert new insights
 				const insightRecords: Omit<UserInsight, "id" | "created_at">[] = [];
@@ -110,7 +108,7 @@ export async function POST(request: NextRequest) {
 									entity_id: insight.entity_id,
 									entity_name: insight.name,
 									popularity_score: insight.popularity || 0,
-									metadata: { source: "qloo" },
+									metadata: { source: "ai" },
 								});
 							});
 						}
@@ -118,8 +116,7 @@ export async function POST(request: NextRequest) {
 				);
 
 				if (insightRecords.length > 0) {
-					const { error: insightsError } = await supabase
-						.from("user_insights")
+					const { error: insightsError } = await getSupabase().from("user_insights")
 						.insert(insightRecords);
 
 					if (insightsError) {

@@ -13,9 +13,9 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-	title: "KindredAI - AI that finds your kind",
+	title: "Mutuals - find people who love what you love",
 	description:
-		"Connect with like-minded people who share your passions through AI-powered matching",
+		"Tell us what you love and AI finds the people whose taste genuinely overlaps with yours",
 	icons: {
 		icon: "/favicon.ico",
 	},
