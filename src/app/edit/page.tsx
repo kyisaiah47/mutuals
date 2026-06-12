@@ -3,8 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TopNav, Logo, Spinner } from "@/components/tumblr";
-import { CHIP_COLORS, chipStyle } from "@/lib/chips";
+import { chipStyle } from "@/lib/chips";
+import { Avatar } from "@/components/avatar";
 import { getSessionUser } from "@/lib/session";
+import { authedFetch } from "@/lib/auth";
+
+const randSeed = () => Math.random().toString(36).slice(2, 10);
 
 function LoadingOverlay({ messages }: { messages: string[] }) {
 	const [i, setI] = useState(0);
@@ -32,6 +36,11 @@ export default function EditPage() {
 	const [loaded, setLoaded] = useState(false);
 	const [error, setError] = useState("");
 	const [loadingMsgs, setLoadingMsgs] = useState<string[] | null>(null);
+	const [avatarSeed, setAvatarSeed] = useState<string | null>(null);
+	const [avatarSeeds, setAvatarSeeds] = useState<string[]>([]);
+	const [avatarChanged, setAvatarChanged] = useState(false);
+
+	const shuffleAvatars = () => setAvatarSeeds(Array.from({ length: 8 }, randSeed));
 
 	useEffect(() => {
 		const u = getSessionUser();
@@ -54,7 +63,9 @@ export default function EditPage() {
 						string[]
 					>;
 					setThings(Object.values(interests).flat());
+					setAvatarSeed(json.data.profile.avatar || null);
 				}
+				setAvatarSeeds(Array.from({ length: 8 }, randSeed));
 			} finally {
 				setLoaded(true);
 			}
@@ -111,10 +122,15 @@ export default function EditPage() {
 			});
 			const insights = (await expandRes.json()).data || {};
 
-			await fetch("/api/update-user-profile", {
+			await authedFetch("/api/update-user-profile", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ userId: me, interests: cat.data, insights }),
+				body: JSON.stringify({
+					userId: me,
+					interests: cat.data,
+					insights,
+					...(avatarChanged && avatarSeed ? { profileData: { avatar: avatarSeed } } : {}),
+				}),
 			});
 
 			const profRes = await fetch("/api/generate-profile", {
@@ -124,7 +140,7 @@ export default function EditPage() {
 			});
 			const prof = await profRes.json();
 			if (prof.success && prof.data?.headline) {
-				await fetch("/api/save-taste-profile", {
+				await authedFetch("/api/save-taste-profile", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ userId: me, tasteProfile: prof.data }),
@@ -193,6 +209,39 @@ export default function EditPage() {
 									{t} <span className="opacity-50 font-normal">×</span>
 								</button>
 							))}
+						</div>
+
+						<div className="max-w-[480px] mx-auto mb-10">
+							<div className="flex items-center justify-between mb-3">
+								<span className="text-white/70 text-[13px]">your face</span>
+								<button
+									onClick={shuffleAvatars}
+									className="text-white/80 text-[13px] underline hover:text-white"
+								>
+									shuffle
+								</button>
+							</div>
+							<div className="grid grid-cols-9 max-sm:grid-cols-5 gap-2 items-center">
+								{avatarSeed && (
+									<div className="ring-[3px] ring-taccent rounded-md overflow-hidden">
+										<Avatar seed={avatarSeed} size={48} className="w-full h-auto" />
+									</div>
+								)}
+								{avatarSeeds.map((s2) => (
+									<button
+										key={s2}
+										onClick={() => {
+											setAvatarSeed(s2);
+											setAvatarChanged(true);
+										}}
+										className={`rounded-md overflow-hidden transition-transform hover:scale-105 ${
+											avatarSeed === s2 ? "ring-[3px] ring-white" : "opacity-80 hover:opacity-100"
+										}`}
+									>
+										<Avatar seed={s2} size={48} className="w-full h-auto" />
+									</button>
+								))}
+							</div>
 						</div>
 
 						{error && (

@@ -32,7 +32,8 @@ export const saveUserProfile = async (
 	interests: Record<string, string[]>,
 	insights: Record<string, InsightItem[]>,
 	contact?: string,
-	avatar?: string
+	avatar?: string,
+	authId?: string
 ) => {
 	try {
 		// First, save the main profile
@@ -44,6 +45,7 @@ export const saveUserProfile = async (
 				insights,
 				contact: contact || null,
 				avatar: avatar || null,
+				auth_id: authId || null,
 				profile_completed: true,
 				updated_at: new Date().toISOString(),
 			})

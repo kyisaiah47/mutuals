@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getSessionUser, clearSession } from "@/lib/session";
+import { getSessionUser } from "@/lib/session";
+import { signOutAccount } from "@/lib/auth";
 
 export function Logo({ size = 22, fill = "#fff" }: { size?: number; fill?: string }) {
 	return (
@@ -41,8 +42,8 @@ export function TopNav() {
 								my page
 							</Link>
 							<button
-								onClick={() => {
-									clearSession();
+								onClick={async () => {
+									await signOutAccount();
 									window.location.href = "/";
 								}}
 								className="text-white/80 hover:text-white"

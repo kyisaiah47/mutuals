@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveTasteProfile } from "@/lib/database";
+import { getAuthedUsername } from "@/lib/server-auth";
 
 export async function POST(request: NextRequest) {
 	try {
 		const { userId, tasteProfile } = await request.json();
+		const authed = await getAuthedUsername(request);
 
+		if (!authed || authed !== userId) {
+			return NextResponse.json(
+				{ success: false, error: "not your page" },
+				{ status: 401 }
+			);
+		}
 		if (!userId || !tasteProfile) {
 			return NextResponse.json(
 				{ success: false, error: "Missing required fields" },

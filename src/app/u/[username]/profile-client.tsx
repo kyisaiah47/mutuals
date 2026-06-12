@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
+import { authedFetch } from "@/lib/auth";
 import { Spinner } from "@/components/tumblr";
 import { Avatar } from "@/components/avatar";
 
@@ -52,10 +53,10 @@ export function WaveBox({ profileUser }: { profileUser: string }) {
 	} | null>(null);
 	const [busy, setBusy] = useState(false);
 
-	const load = useCallback(async (user: string) => {
+	const load = useCallback(async () => {
 		try {
-			const res = await fetch(
-				`/api/wave?me=${encodeURIComponent(user)}&them=${encodeURIComponent(profileUser)}`
+			const res = await authedFetch(
+				`/api/wave?them=${encodeURIComponent(profileUser)}`
 			);
 			const json = await res.json();
 			if (json.success) setState(json.data);
@@ -65,7 +66,7 @@ export function WaveBox({ profileUser }: { profileUser: string }) {
 	useEffect(() => {
 		const u = getSessionUser();
 		setMe(u);
-		if (u && u !== profileUser) load(u);
+		if (u && u !== profileUser) load();
 	}, [profileUser, load]);
 
 	if (!me || me === profileUser) return null;
@@ -73,12 +74,12 @@ export function WaveBox({ profileUser }: { profileUser: string }) {
 	const wave = async () => {
 		setBusy(true);
 		try {
-			await fetch("/api/wave", {
+			await authedFetch("/api/wave", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ from: me, to: profileUser }),
+				body: JSON.stringify({ to: profileUser }),
 			});
-			await load(me);
+			await load();
 		} finally {
 			setBusy(false);
 		}
@@ -158,7 +159,7 @@ export function Wall({ profileUser }: { profileUser: string }) {
 		if (!draft.trim() || !me) return;
 		setPosting(true);
 		try {
-			await fetch("/api/wall", {
+			await authedFetch("/api/wall", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({

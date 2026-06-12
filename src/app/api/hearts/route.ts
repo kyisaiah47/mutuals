@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { getAuthedUsername } from "@/lib/server-auth";
 
 export async function POST(req: NextRequest) {
 	try {
-		const { postId, user } = await req.json();
-		if (!postId || !user) {
+		const user = await getAuthedUsername(req);
+		if (!user) {
+			return NextResponse.json({ success: false, error: "log in first" }, { status: 401 });
+		}
+		const { postId } = await req.json();
+		if (!postId) {
 			return NextResponse.json(
-				{ success: false, error: "postId and user required" },
+				{ success: false, error: "postId required" },
 				{ status: 400 }
 			);
 		}

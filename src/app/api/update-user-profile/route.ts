@@ -5,12 +5,20 @@ import {
 	UserInsight,
 	InsightItem,
 } from "@/lib/supabase";
+import { getAuthedUsername } from "@/lib/server-auth";
 
 export async function POST(request: NextRequest) {
 	try {
+		const authed = await getAuthedUsername(request);
 		const body = await request.json();
 		const { userId, profileData, interests, insights } = body;
 
+		if (!authed || authed !== userId) {
+			return NextResponse.json(
+				{ success: false, message: "not your page" },
+				{ status: 401 }
+			);
+		}
 		if (!userId) {
 			return NextResponse.json(
 				{

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TopNav, Spinner, SectionLabel } from "@/components/tumblr";
-import { CHIP_COLORS, chipStyle } from "@/lib/chips";
+import { chipStyle } from "@/lib/chips";
 import { Avatar } from "@/components/avatar";
 import { getSessionUser } from "@/lib/session";
 

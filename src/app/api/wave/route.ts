@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { getAuthedUsername } from "@/lib/server-auth";
 
 async function isMutual(a: string, b: string) {
 	const { data } = await getSupabase()
@@ -15,12 +16,12 @@ async function isMutual(a: string, b: string) {
 
 export async function GET(req: NextRequest) {
 	try {
-		const me = req.nextUrl.searchParams.get("me");
+		const me = await getAuthedUsername(req);
 		const them = req.nextUrl.searchParams.get("them");
 		if (!me || !them) {
 			return NextResponse.json(
-				{ success: false, error: "me and them required" },
-				{ status: 400 }
+				{ success: false, error: "auth and them required" },
+				{ status: 401 }
 			);
 		}
 
@@ -44,8 +45,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
 	try {
-		const { from, to } = await req.json();
-		if (!from || !to || from === to) {
+		const from = await getAuthedUsername(req);
+		if (!from) {
+			return NextResponse.json({ success: false, error: "log in first" }, { status: 401 });
+		}
+		const { to } = await req.json();
+		if (!to || from === to) {
 			return NextResponse.json(
 				{ success: false, error: "invalid wave" },
 				{ status: 400 }

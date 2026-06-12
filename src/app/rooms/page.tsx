@@ -7,6 +7,7 @@ import { Logo, Spinner } from "@/components/tumblr";
 import { Avatar } from "@/components/avatar";
 import { CHIP_COLORS } from "@/lib/chips";
 import { getSessionUser } from "@/lib/session";
+import { authedFetch } from "@/lib/auth";
 
 // every thing is a room (m/radiohead). threads have titles; replies are comments.
 
@@ -200,7 +201,7 @@ function RoomsApp() {
 		if (!targetRoom) return;
 		setPosting(true);
 		try {
-			const res = await fetch("/api/posts", {
+			const res = await authedFetch("/api/posts", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -223,7 +224,7 @@ function RoomsApp() {
 
 	const submitComment = async () => {
 		if (!me || !thread || !commentDraft.trim()) return;
-		await fetch("/api/posts", {
+		await authedFetch("/api/posts", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -245,7 +246,7 @@ function RoomsApp() {
 				: p;
 		setThreads((prev) => prev?.map(flip) ?? null);
 		setThread((prev) => (prev ? flip(prev) : prev));
-		await fetch("/api/hearts", {
+		await authedFetch("/api/hearts", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ postId: post.id, user: me }),

@@ -6,6 +6,7 @@ import { TopNav, Logo } from "@/components/tumblr";
 import { CHIP_COLORS, chipStyle } from "@/lib/chips";
 import { Avatar } from "@/components/avatar";
 import { setSessionUser } from "@/lib/session";
+import { signUpAccount, authedFetch } from "@/lib/auth";
 
 const randSeed = () => Math.random().toString(36).slice(2, 10);
 
@@ -64,6 +65,7 @@ export default function Start() {
 	const [input, setInput] = useState("");
 	const [interests, setInterests] = useState<Interests>({});
 	const [username, setUsername] = useState("");
+	const [password, setPassword] = useState("");
 	const [contact, setContact] = useState("");
 	const [error, setError] = useState("");
 	const [loadingMsgs, setLoadingMsgs] = useState<string[] | null>(null);
@@ -171,6 +173,9 @@ export default function Start() {
 		if (!/^[a-z0-9_]{3,20}$/.test(u)) {
 			return setError("username: 3–20 chars, letters/numbers/underscores");
 		}
+		if (password.length < 8) {
+			return setError("password needs at least 8 characters");
+		}
 		setError("");
 		setLoadingMsgs([
 			"checking the name…",
@@ -189,6 +194,16 @@ export default function Start() {
 				return setError("that username is taken — pick another or log in");
 			}
 
+			const signup = await signUpAccount(u, password);
+			if (!signup.ok) {
+				setLoadingMsgs(null);
+				return setError(
+					signup.error.includes("already registered")
+						? "that username is taken — pick another or log in"
+						: "couldn't create your account — try again"
+				);
+			}
+
 			const expandRes = await fetch("/api/expand-tastes", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -196,7 +211,7 @@ export default function Start() {
 			});
 			const insights = (await expandRes.json()).data || {};
 
-			const saveRes = await fetch("/api/save-profile", {
+			const saveRes = await authedFetch("/api/save-profile", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -216,7 +231,7 @@ export default function Start() {
 			});
 			const prof = await profRes.json();
 			if (prof.success && prof.data?.headline) {
-				await fetch("/api/save-taste-profile", {
+				await authedFetch("/api/save-taste-profile", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ userId: u, tasteProfile: prof.data }),
@@ -414,6 +429,20 @@ export default function Start() {
 								{suggesting ? "…" : "suggest"}
 							</button>
 						</div>
+
+						<label className="block text-white/70 text-[13px] mt-8 mb-1.5">
+							password — so only you can log in
+						</label>
+						<input
+							type="password"
+							value={password}
+							onChange={(e) => {
+								setPassword(e.target.value);
+								setError("");
+							}}
+							placeholder="at least 8 characters"
+							className="w-full bg-transparent border-b-2 border-white/25 focus:border-white/70 transition-colors text-white text-[16px] py-2 outline-none placeholder:text-white/35"
+						/>
 
 						<div className="mt-10">
 							<div className="flex items-center justify-between mb-3">

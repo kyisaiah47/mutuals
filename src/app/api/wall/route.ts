@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { getAuthedUsername } from "@/lib/server-auth";
 
 export async function GET(req: NextRequest) {
 	try {
@@ -48,8 +49,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
 	try {
-		const { profileUser, author, body } = await req.json();
-		if (!profileUser || !author || !body?.trim()) {
+		const author = await getAuthedUsername(req);
+		if (!author) {
+			return NextResponse.json({ success: false, error: "log in first" }, { status: 401 });
+		}
+		const { profileUser, body } = await req.json();
+		if (!profileUser || !body?.trim()) {
 			return NextResponse.json(
 				{ success: false, error: "missing fields" },
 				{ status: 400 }

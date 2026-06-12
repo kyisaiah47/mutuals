@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { getAuthedUsername } from "@/lib/server-auth";
 
 // rooms are things: room_posts.category holds the thing name (e.g. "Radiohead")
 
@@ -101,11 +102,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
 	try {
-		const { author, room, title, kind, body, parentId } = await req.json();
+		const author = await getAuthedUsername(req);
+		if (!author) {
+			return NextResponse.json({ success: false, error: "log in first" }, { status: 401 });
+		}
+		const { room, title, kind, body, parentId } = await req.json();
 
-		if (!author || !body?.trim()) {
+		if (!body?.trim()) {
 			return NextResponse.json(
-				{ success: false, error: "author and body required" },
+				{ success: false, error: "body required" },
 				{ status: 400 }
 			);
 		}
