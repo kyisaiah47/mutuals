@@ -32,6 +32,7 @@ export default function EditPage() {
 	const router = useRouter();
 	const [me, setMe] = useState<string | null>(null);
 	const [things, setThings] = useState<string[]>([]);
+	const [originalThings, setOriginalThings] = useState<string[]>([]);
 	const [input, setInput] = useState("");
 	const [loaded, setLoaded] = useState(false);
 	const [error, setError] = useState("");
@@ -62,7 +63,9 @@ export default function EditPage() {
 						string,
 						string[]
 					>;
-					setThings(Object.values(interests).flat());
+					const flat = Object.values(interests).flat();
+					setThings(flat);
+					setOriginalThings(flat);
 					setAvatarSeed(json.data.profile.avatar || null);
 				}
 				setAvatarSeeds(Array.from({ length: 8 }, randSeed));
@@ -98,6 +101,27 @@ export default function EditPage() {
 			return setError("keep at least 3 things on your page");
 		}
 		setError("");
+
+		const norm = (arr: string[]) => [...arr].map((t) => t.toLowerCase()).sort().join("|");
+		const thingsChanged = norm(all) !== norm(originalThings);
+
+		if (!thingsChanged) {
+			// nothing taste-related changed — no AI runs
+			if (avatarChanged && avatarSeed) {
+				setLoadingMsgs(["saving your face…"]);
+				await authedFetch("/api/update-user-profile", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						userId: me,
+						profileData: { avatar: avatarSeed },
+					}),
+				});
+			}
+			router.push(`/u/${encodeURIComponent(me)}`);
+			return;
+		}
+
 		setLoadingMsgs([
 			"re-sorting your loves…",
 			"expanding your taste…",
