@@ -112,7 +112,7 @@ export function WaveBox({ profileUser }: { profileUser: string }) {
 					<button
 						onClick={wave}
 						disabled={busy}
-						className="bg-taccent text-white font-bold px-5 py-1.5 rounded-full hover:opacity-90 disabled:opacity-50 shrink-0 ml-3"
+						className="bg-taccent text-tnavy font-bold px-5 py-1.5 rounded-full hover:opacity-90 disabled:opacity-50 shrink-0 ml-3"
 					>
 						{busy ? "…" : "wave"}
 					</button>
@@ -192,7 +192,7 @@ export function Wall({ profileUser }: { profileUser: string }) {
 					<button
 						onClick={post}
 						disabled={posting || !draft.trim()}
-						className="bg-taccent text-white text-[13px] font-bold px-5 rounded-full hover:opacity-90 disabled:opacity-40"
+						className="bg-taccent text-tnavy text-[13px] font-bold px-5 rounded-full hover:opacity-90 disabled:opacity-40"
 					>
 						post
 					</button>

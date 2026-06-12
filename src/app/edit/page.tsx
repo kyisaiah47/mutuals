@@ -3,18 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TopNav, Logo, Spinner } from "@/components/tumblr";
+import { CHIP_COLORS, chipStyle } from "@/lib/chips";
 import { getSessionUser } from "@/lib/session";
-
-const CHIP_COLORS = ["#9fef00", "#ffb02e", "#2dd4a8", "#b18cff", "#ff8fc1"];
-
-function chipStyle(i: number): React.CSSProperties {
-	const rot = ((i * 7919) % 7) - 3;
-	return {
-		background: CHIP_COLORS[i % CHIP_COLORS.length],
-		["--rot" as string]: `${rot}deg`,
-		animationDelay: `${(i % 5) * 0.08}s, ${0.25 + (i % 5) * 0.08}s`,
-	};
-}
 
 function LoadingOverlay({ messages }: { messages: string[] }) {
 	const [i, setI] = useState(0);
@@ -213,7 +203,7 @@ export default function EditPage() {
 						<div className="text-center">
 							<button
 								onClick={save}
-								className="bg-taccent text-white font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
+								className="bg-taccent text-tnavy font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
 							>
 								save changes
 							</button>

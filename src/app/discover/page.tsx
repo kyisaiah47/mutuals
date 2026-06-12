@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { TopNav, Spinner } from "@/components/tumblr";
+import { TopNav, Spinner, SectionLabel } from "@/components/tumblr";
+import { CHIP_COLORS, chipStyle } from "@/lib/chips";
 import { Avatar } from "@/components/avatar";
 import { getSessionUser } from "@/lib/session";
-
-const CHIP_COLORS = ["#9fef00", "#ffb02e", "#2dd4a8", "#b18cff", "#ff8fc1"];
 
 interface PersonRow {
 	user_id: string;
@@ -17,15 +16,6 @@ interface PersonRow {
 	vibe?: string;
 	shared?: string;
 	match?: number;
-}
-
-function chipStyle(i: number): React.CSSProperties {
-	const rot = ((i * 7919) % 7) - 3;
-	return {
-		background: CHIP_COLORS[i % CHIP_COLORS.length],
-		["--rot" as string]: `${rot}deg`,
-		animationDelay: `${(i % 8) * 0.05}s, ${0.25 + (i % 8) * 0.05}s`,
-	};
 }
 
 function PeopleTable({
@@ -83,14 +73,6 @@ function PeopleTable({
 				</div>
 			))}
 		</div>
-	);
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-	return (
-		<p className="text-white/70 text-[12px] uppercase tracking-widest mb-3 px-3">
-			{children}
-		</p>
 	);
 }
 
@@ -227,8 +209,8 @@ export default function Discover() {
 
 						{loveFilter ? (
 							<div className="anim-fadeup">
-								<div className="flex items-baseline justify-between px-3 mb-3">
-									<p className="text-white/70 text-[12px] uppercase tracking-widest">
+								<div className="flex items-baseline justify-between border-b border-white/15 pb-2 mb-4">
+									<p className="text-white/60 text-[12px] uppercase tracking-widest">
 										people who love {loveFilter}
 									</p>
 									<button

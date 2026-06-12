@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TopNav, Logo } from "@/components/tumblr";
+import { CHIP_COLORS, chipStyle } from "@/lib/chips";
 import { Avatar } from "@/components/avatar";
 import { setSessionUser } from "@/lib/session";
 
@@ -28,17 +29,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 	locality: "places",
 	tag: "vibes",
 };
-
-const CHIP_COLORS = ["#9fef00", "#ffb02e", "#2dd4a8", "#b18cff", "#ff8fc1"];
-
-function chipStyle(i: number): React.CSSProperties {
-	const rot = ((i * 7919) % 7) - 3; // deterministic -3..3deg
-	return {
-		background: CHIP_COLORS[i % CHIP_COLORS.length],
-		["--rot" as string]: `${rot}deg`,
-		animationDelay: `${(i % 5) * 0.12}s, ${0.25 + (i % 5) * 0.12}s`,
-	};
-}
 
 function encouragement(n: number) {
 	if (n === 0) return "type something and hit enter ↵";
@@ -325,7 +315,7 @@ export default function Start() {
 							<div className="text-center anim-fadeup">
 								<button
 									onClick={categorize}
-									className="bg-taccent text-white font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
+									className="bg-taccent text-tnavy font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
 								>
 									next →
 								</button>
@@ -382,7 +372,7 @@ export default function Start() {
 						<div className="text-center">
 							<button
 								onClick={() => setStep("claim")}
-								className="bg-taccent text-white font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
+								className="bg-taccent text-tnavy font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
 							>
 								looks right →
 							</button>
@@ -470,7 +460,7 @@ export default function Start() {
 						<div className="text-center mt-10">
 							<button
 								onClick={create}
-								className="bg-taccent text-white font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
+								className="bg-taccent text-tnavy font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
 							>
 								make my page
 							</button>

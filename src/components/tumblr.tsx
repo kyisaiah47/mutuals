@@ -21,7 +21,7 @@ export function TopNav() {
 
 	return (
 		<div className="sticky top-0 z-20 bg-tnavy border-b border-white/15">
-			<div className="max-w-[625px] mx-auto px-4 py-2.5 flex items-center justify-between">
+			<div className="max-w-[1000px] mx-auto px-6 py-2.5 flex items-center justify-between">
 				<Link href="/" className="flex items-center gap-2">
 					<Logo />
 					<span className="font-extrabold text-[22px] tracking-tight text-white">
@@ -66,37 +66,6 @@ export function TopNav() {
 	);
 }
 
-export function PostCard({
-	author,
-	label,
-	footer,
-	children,
-}: {
-	author?: string;
-	label?: string;
-	footer?: React.ReactNode;
-	children: React.ReactNode;
-}) {
-	return (
-		<article className="bg-white/5 border border-white/10 text-white rounded-lg mb-6">
-			<div className="px-5 py-4">
-				{(author || label) && (
-					<p className="text-[13px] text-white/70 mb-2.5">
-						{author && <strong className="text-white">{author}</strong>}
-						{author && label && " · "}
-						{label}
-					</p>
-				)}
-				{children}
-			</div>
-			{footer && (
-				<div className="border-t border-white/10 px-5 py-2.5 text-[13px] text-white/70 flex justify-between">
-					{footer}
-				</div>
-			)}
-		</article>
-	);
-}
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
 	return (

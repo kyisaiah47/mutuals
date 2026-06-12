@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { TopNav, PostCard } from "@/components/tumblr";
+import { TopNav, SectionLabel } from "@/components/tumblr";
+import { chipStyle } from "@/lib/chips";
 import { getSessionUser } from "@/lib/session";
 
 export default function Landing() {
@@ -28,7 +29,7 @@ export default function Landing() {
 							<div className="mt-6 flex items-center justify-center gap-3">
 								<Link
 									href="/discover"
-									className="bg-taccent text-white font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90"
+									className="bg-taccent text-tnavy font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90"
 								>
 									discover people
 								</Link>
@@ -50,7 +51,7 @@ export default function Landing() {
 							<div className="mt-6 flex items-center justify-center gap-3">
 								<Link
 									href="/start"
-									className="bg-taccent text-white font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90"
+									className="bg-taccent text-tnavy font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90"
 								>
 									make your page
 								</Link>
@@ -65,47 +66,55 @@ export default function Landing() {
 					)}
 				</div>
 
-				{/* sample post — show, don't tell */}
-				<p className="text-white/70 text-[12px] text-center mb-3 uppercase tracking-wider">
+				{/* sample profile preview — show, don't tell */}
+				<p className="text-white/60 text-[12px] text-center mb-6 uppercase tracking-widest">
 					your page ends up looking like this
 				</p>
-				<PostCard
-					author="isaiah"
-					label="taste profile"
-					footer={
-						<>
-							<span>♥ 412 notes</span>
-							<span>23 mutuals</span>
-						</>
-					}
-				>
-					<p className="text-[15px] leading-relaxed">
-						You&apos;re drawn to stories that fold back on themselves and
-						soundtracks that blur the line between beauty and unease. You
-						don&apos;t just consume art — you interrogate it.
-					</p>
-					<p className="text-[13px] mt-3.5 text-white/60">
-						#obsessively-pattern-seeking #emotionally-cerebral
-						#aesthetically-driven
-					</p>
-				</PostCard>
 
-				<PostCard author="isaiah" label="things i love">
-					<p className="text-[15px] leading-relaxed mb-2">
-						<strong>music:</strong>{" "}
-						<span className="text-[#9fef00]">Radiohead</span>, <span className="text-[#ffb02e]">Portishead</span>, <span className="text-[#b18cff]">Björk</span>
-					</p>
-					<p className="text-[15px] leading-relaxed mb-2">
-						<strong>movies:</strong>{" "}
-						<span className="text-[#2dd4a8]">Inception</span>, <span className="text-[#ff8fc1]">Memento</span>, <span className="text-[#9fef00]">Primer</span>
-					</p>
-					<p className="text-[15px] leading-relaxed">
-						<strong>books:</strong>{" "}
-						<span className="text-[#ffb02e]">House of Leaves</span>, <span className="text-[#b18cff]">Borges</span>
-					</p>
-				</PostCard>
+				<div className="space-y-9">
+					<section>
+						<SectionLabel>things isaiah loves</SectionLabel>
+						<div className="space-y-3">
+							{[
+								["music", ["Radiohead", "Portishead", "Björk"]],
+								["movies", ["Inception", "Memento", "Primer"]],
+								["books", ["House of Leaves", "Borges"]],
+							].map(([label, items], gi) => (
+								<div key={label as string}>
+									<p className="text-white/60 text-[11px] uppercase tracking-widest mb-1.5">
+										{label as string}
+									</p>
+									<div className="flex flex-wrap gap-2">
+										{(items as string[]).map((it, i) => (
+											<span
+												key={it}
+												className="anim-chip text-[#1a1a1a] font-bold text-[13px] px-3 py-1 rounded-full"
+												style={chipStyle(gi * 3 + i)}
+											>
+												{it}
+											</span>
+										))}
+									</div>
+								</div>
+							))}
+						</div>
+					</section>
 
-				<div className="text-center mt-8">
+					<section>
+						<SectionLabel>taste profile</SectionLabel>
+						<p className="text-white/90 text-[15px] leading-relaxed">
+							You&apos;re drawn to stories that fold back on themselves and
+							soundtracks that blur the line between beauty and unease. You
+							don&apos;t just consume art — you interrogate it.
+						</p>
+						<p className="text-[13px] mt-3 text-white/60">
+							#obsessively-pattern-seeking #emotionally-cerebral
+							#aesthetically-driven
+						</p>
+					</section>
+				</div>
+
+				<div className="text-center mt-10">
 					<Link
 						href="/start"
 						className="text-white/70 text-[14px] underline hover:text-white"
