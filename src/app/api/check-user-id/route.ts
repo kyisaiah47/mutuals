@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkUserIdExists } from "@/lib/database";
+import { getSupabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -12,18 +12,17 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const { exists, error } = await checkUserIdExists(userId);
-
-		if (error) {
-			return NextResponse.json(
-				{ success: false, message: "Failed to check user ID" },
-				{ status: 500 }
-			);
-		}
+		const { data, error } = await getSupabase()
+			.from("user_profiles")
+			.select("user_id, auth_id")
+			.eq("user_id", userId)
+			.maybeSingle();
+		if (error) throw error;
 
 		return NextResponse.json({
 			success: true,
-			exists,
+			exists: !!data,
+			claimable: !!data && !data.auth_id,
 		});
 	} catch (error) {
 		console.error("Error in check-user-id API:", error);

@@ -1,33 +1,16 @@
 "use client";
 
 import { getSupabase } from "./supabase";
-import { setSessionUser, clearSession } from "./session";
+import { clearSession } from "./session";
 
-// usernames are the identity; auth runs on synthetic emails under the hood
-export const synthEmail = (username: string) =>
-	`${username.toLowerCase()}@m.mutuals.app`;
+// google oauth: one tap, session out. /auth handles the return trip;
+// usernames are page handles, not logins.
 
-export async function signUpAccount(username: string, password: string) {
-	const { data, error } = await getSupabase().auth.signUp({
-		email: synthEmail(username),
-		password,
+export async function signInWithGoogle() {
+	await getSupabase().auth.signInWithOAuth({
+		provider: "google",
+		options: { redirectTo: `${window.location.origin}/auth` },
 	});
-	if (error || !data.user) {
-		return { ok: false as const, error: error?.message || "signup failed" };
-	}
-	return { ok: true as const, authId: data.user.id };
-}
-
-export async function signInAccount(username: string, password: string) {
-	const { data, error } = await getSupabase().auth.signInWithPassword({
-		email: synthEmail(username),
-		password,
-	});
-	if (error || !data.user) {
-		return { ok: false as const, error: error?.message || "login failed" };
-	}
-	setSessionUser(username);
-	return { ok: true as const };
 }
 
 export async function signOutAccount() {
@@ -40,6 +23,10 @@ export async function getAccessToken(): Promise<string | null> {
 	return data.session?.access_token || null;
 }
 
+export async function hasSession(): Promise<boolean> {
+	return !!(await getAccessToken());
+}
+
 export async function authedFetch(url: string, options: RequestInit = {}) {
 	const token = await getAccessToken();
 	return fetch(url, {
@@ -49,4 +36,32 @@ export async function authedFetch(url: string, options: RequestInit = {}) {
 			...(token ? { Authorization: `Bearer ${token}` } : {}),
 		},
 	});
+}
+
+// wizard state survives the trip to the inbox and back
+const PENDING_KEY = "mutuals_pending_signup";
+
+export interface PendingSignup {
+	username: string;
+	interests: Record<string, string[]>;
+	contact?: string;
+	avatarSeed?: string;
+}
+
+export function stashPendingSignup(p: PendingSignup) {
+	localStorage.setItem(PENDING_KEY, JSON.stringify(p));
+}
+
+export function takePendingSignup(): PendingSignup | null {
+	const raw = localStorage.getItem(PENDING_KEY);
+	if (!raw) return null;
+	try {
+		return JSON.parse(raw) as PendingSignup;
+	} catch {
+		return null;
+	}
+}
+
+export function clearPendingSignup() {
+	localStorage.removeItem(PENDING_KEY);
 }

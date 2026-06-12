@@ -10,6 +10,7 @@ import { Avatar } from "@/components/avatar";
 export function OwnerBar({ username }: { username: string }) {
 	const [isOwner, setIsOwner] = useState(false);
 	const [copied, setCopied] = useState(false);
+	const [regenerating, setRegenerating] = useState(false);
 	useEffect(() => setIsOwner(getSessionUser() === username), [username]);
 	if (!isOwner) return null;
 
@@ -17,6 +18,38 @@ export function OwnerBar({ username }: { username: string }) {
 		await navigator.clipboard.writeText(window.location.href);
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
+	};
+
+	const regenerate = async () => {
+		if (regenerating) return;
+		setRegenerating(true);
+		try {
+			const prof = await fetch("/api/get-user-profile", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userId: username }),
+			}).then((r) => r.json());
+			if (!prof.success) return;
+
+			const gen = await fetch("/api/generate-profile", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					interests: prof.data.profile.interests,
+					insights: prof.data.profile.insights,
+				}),
+			}).then((r) => r.json());
+			if (gen.success && gen.data?.headline) {
+				await authedFetch("/api/save-taste-profile", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ userId: username, tasteProfile: gen.data }),
+				});
+				window.location.reload();
+			}
+		} finally {
+			setRegenerating(false);
+		}
 	};
 
 	return (
@@ -29,6 +62,13 @@ export function OwnerBar({ username }: { username: string }) {
 			<div className="mb-6 flex items-center justify-between bg-white/8 border border-white/15 rounded px-4 py-2.5 text-[13px]">
 				<span className="text-white/70">this is your page</span>
 				<div className="flex gap-4">
+					<button
+						onClick={regenerate}
+						disabled={regenerating}
+						className="text-white/80 underline hover:text-white disabled:opacity-50"
+					>
+						{regenerating ? "rewriting…" : "regenerate profile"}
+					</button>
 					<Link href="/edit" className="text-white/80 underline hover:text-white">
 						edit your things
 					</Link>

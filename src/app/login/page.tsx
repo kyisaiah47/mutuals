@@ -1,135 +1,58 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { TopNav, Spinner } from "@/components/tumblr";
-import { setSessionUser } from "@/lib/session";
-import { signInAccount, signUpAccount, authedFetch } from "@/lib/auth";
+import { TopNav } from "@/components/tumblr";
+import { signInWithGoogle } from "@/lib/auth";
+
+function GoogleMark() {
+	return (
+		<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+			<path
+				fill="#4285F4"
+				d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.16 3.57-8.81z"
+			/>
+			<path
+				fill="#34A853"
+				d="M12 24c3.24 0 5.96-1.07 7.93-2.91l-3.87-3c-1.07.72-2.45 1.15-4.06 1.15-3.13 0-5.78-2.11-6.73-4.96H1.29v3.1A12 12 0 0 0 12 24z"
+			/>
+			<path
+				fill="#FBBC05"
+				d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28v-3.1H1.29a12 12 0 0 0 0 10.76l3.98-3.1z"
+			/>
+			<path
+				fill="#EA4335"
+				d="M12 4.77c1.76 0 3.35.61 4.6 1.8l3.43-3.44A11.97 11.97 0 0 0 12 0 12 12 0 0 0 1.29 6.62l3.98 3.1C6.22 6.88 8.87 4.77 12 4.77z"
+			/>
+		</svg>
+	);
+}
 
 export default function Login() {
-	const router = useRouter();
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
-	const [error, setError] = useState("");
-	const [loading, setLoading] = useState(false);
-	const [claimMode, setClaimMode] = useState(false);
-
-	const go = (u: string) => router.push(`/u/${encodeURIComponent(u)}`);
-
-	const login = async () => {
-		const u = username.trim().toLowerCase();
-		if (!u) return setError("enter your username");
-		if (password.length < 8) return setError("password is at least 8 characters");
-		setLoading(true);
-		setError("");
-		try {
-			if (claimMode) {
-				const signup = await signUpAccount(u, password);
-				if (!signup.ok) {
-					return setError("couldn't set a password — try a different one");
-				}
-				const res = await authedFetch("/api/claim-account", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ username: u }),
-				}).then((r) => r.json());
-				if (!res.success) {
-					return setError("this page was already claimed — wrong password?");
-				}
-				setSessionUser(u);
-				return go(u);
-			}
-
-			const result = await signInAccount(u, password);
-			if (result.ok) return go(u);
-
-			// no auth account — maybe a pre-auth page that can be claimed
-			const prof = await fetch("/api/get-user-profile", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ userId: u }),
-			}).then((r) => r.json());
-
-			if (prof.success && !prof.data.profile.auth_id) {
-				// page exists but was made before passwords — claimable
-				setClaimMode(true);
-				setError("");
-			} else {
-				setError("wrong username or password");
-			}
-		} catch {
-			setError("something broke, try again");
-		} finally {
-			setLoading(false);
-		}
-	};
-
 	return (
 		<div className="t-page">
 			<TopNav />
-			<main className="max-w-[480px] mx-auto px-4 pt-24 pb-20 anim-fadeup">
-				<h1 className="text-center text-white text-[32px] font-extrabold mb-2">
-					{claimMode ? "claim your page" : "welcome back"}
+			<main className="max-w-[480px] mx-auto px-4 pt-24 pb-20 anim-fadeup text-center">
+				<h1 className="text-white text-[32px] font-extrabold mb-2">
+					welcome back
 				</h1>
-				<p className="text-center text-white/80 text-[15px] mb-12">
-					{claimMode
-						? `${username} exists but has no password yet — set one now and it's yours forever`
-						: "your page missed you"}
+				<p className="text-white/80 text-[15px] mb-12">
+					one tap, no passwords
 				</p>
 
-				<div className="flex items-baseline justify-center border-b-2 border-white/25 focus-within:border-white/70 transition-colors mb-6">
-					<span className="text-white/80 text-[22px]">mutuals/u/</span>
-					<input
-						value={username}
-						onChange={(e) => {
-							setUsername(e.target.value.toLowerCase());
-							setError("");
-							setClaimMode(false);
-						}}
-						placeholder="yourname"
-						className="bg-transparent text-white text-[22px] py-3 outline-none placeholder:text-white/35 min-w-0 flex-1"
-						autoFocus
-					/>
-				</div>
+				<button
+					onClick={() => signInWithGoogle()}
+					className="inline-flex items-center gap-3 bg-white text-[#1a1a1a] font-bold text-[16px] px-8 py-3.5 rounded-full hover:opacity-90"
+				>
+					<GoogleMark />
+					continue with google
+				</button>
 
-				<input
-					type="password"
-					value={password}
-					onChange={(e) => {
-						setPassword(e.target.value);
-						setError("");
-					}}
-					onKeyDown={(e) => e.key === "Enter" && !loading && login()}
-					placeholder={claimMode ? "choose a password (8+ chars)" : "password"}
-					className="w-full bg-transparent border-b-2 border-white/25 focus:border-white/70 transition-colors text-white text-[18px] py-3 outline-none placeholder:text-white/35"
-				/>
-
-				{error && (
-					<p className="text-center text-[#ff7a70] text-[13px] mt-5">{error}</p>
-				)}
-
-				<div className="text-center mt-10">
-					<button
-						onClick={login}
-						disabled={loading}
-						className="bg-white text-tnavy font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90 disabled:opacity-50"
-					>
-						{loading ? (
-							<Spinner label={claimMode ? "claiming…" : "logging in…"} />
-						) : claimMode ? (
-							"claim it"
-						) : (
-							"log in"
-						)}
-					</button>
-					<p className="text-[13px] text-white/70 mt-6">
-						no page yet?{" "}
-						<Link href="/start" className="text-white/80 underline hover:text-white">
-							make one
-						</Link>
-					</p>
-				</div>
+				<p className="text-[13px] text-white/70 mt-8">
+					no page yet?{" "}
+					<Link href="/start" className="text-white/80 underline hover:text-white">
+						make one
+					</Link>
+				</p>
 			</main>
 		</div>
 	);

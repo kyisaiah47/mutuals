@@ -6,7 +6,7 @@ import { TopNav, Logo } from "@/components/tumblr";
 import { CHIP_COLORS, chipStyle } from "@/lib/chips";
 import { Avatar } from "@/components/avatar";
 import { setSessionUser } from "@/lib/session";
-import { signUpAccount, authedFetch } from "@/lib/auth";
+import { authedFetch, hasSession, signInWithGoogle, stashPendingSignup } from "@/lib/auth";
 
 const randSeed = () => Math.random().toString(36).slice(2, 10);
 
@@ -65,7 +65,6 @@ export default function Start() {
 	const [input, setInput] = useState("");
 	const [interests, setInterests] = useState<Interests>({});
 	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
 	const [contact, setContact] = useState("");
 	const [error, setError] = useState("");
 	const [loadingMsgs, setLoadingMsgs] = useState<string[] | null>(null);
@@ -173,10 +172,29 @@ export default function Start() {
 		if (!/^[a-z0-9_]{3,20}$/.test(u)) {
 			return setError("username: 3–20 chars, letters/numbers/underscores");
 		}
-		if (password.length < 8) {
-			return setError("password needs at least 8 characters");
-		}
 		setError("");
+
+		const loggedIn = await hasSession();
+		if (!loggedIn) {
+			// no session yet: stash the wizard and bounce through google
+			const check = await fetch("/api/check-user-id", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userId: u }),
+			}).then((r) => r.json());
+			if (check.exists && !check.claimable) {
+				return setError("that username is taken — pick another");
+			}
+			stashPendingSignup({
+				username: u,
+				interests,
+				contact: contact.trim() || undefined,
+				avatarSeed: avatarSeed || undefined,
+			});
+			await signInWithGoogle();
+			return;
+		}
+
 		setLoadingMsgs([
 			"checking the name…",
 			"expanding your taste…",
@@ -192,16 +210,6 @@ export default function Start() {
 			if ((await checkRes.json()).exists) {
 				setLoadingMsgs(null);
 				return setError("that username is taken — pick another or log in");
-			}
-
-			const signup = await signUpAccount(u, password);
-			if (!signup.ok) {
-				setLoadingMsgs(null);
-				return setError(
-					signup.error.includes("already registered")
-						? "that username is taken — pick another or log in"
-						: "couldn't create your account — try again"
-				);
 			}
 
 			const expandRes = await fetch("/api/expand-tastes", {
@@ -430,20 +438,7 @@ export default function Start() {
 							</button>
 						</div>
 
-						<label className="block text-white/70 text-[13px] mt-8 mb-1.5">
-							password — so only you can log in
-						</label>
-						<input
-							type="password"
-							value={password}
-							onChange={(e) => {
-								setPassword(e.target.value);
-								setError("");
-							}}
-							placeholder="at least 8 characters"
-							className="w-full bg-transparent border-b-2 border-white/25 focus:border-white/70 transition-colors text-white text-[16px] py-2 outline-none placeholder:text-white/35"
-						/>
-
+	
 						<div className="mt-10">
 							<div className="flex items-center justify-between mb-3">
 								<span className="text-white/70 text-[13px]">
@@ -491,8 +486,11 @@ export default function Start() {
 								onClick={create}
 								className="bg-taccent text-tnavy font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90"
 							>
-								make my page
+								make my page with google
 							</button>
+							<p className="text-white/60 text-[12px] mt-3">
+								you&apos;ll tap through google real quick — everything here is saved
+							</p>
 							<p className="mt-4">
 								<button
 									onClick={() => setStep("confirm")}

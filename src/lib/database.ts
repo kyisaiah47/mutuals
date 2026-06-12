@@ -5,27 +5,6 @@ export const generateUserId = () => {
 	return "user_" + Math.random().toString(36).substr(2, 9);
 };
 
-// Check if a user ID is already taken
-export const checkUserIdExists = async (userId: string) => {
-	try {
-		const { data, error } = await getSupabase()
-			.from("user_profiles")
-			.select("user_id")
-			.eq("user_id", userId)
-			.single();
-
-		if (error && error.code !== "PGRST116") {
-			// PGRST116 is "not found" error, which is what we want
-			throw error;
-		}
-
-		return { exists: !!data, error: null };
-	} catch (error) {
-		console.error("Error checking user ID:", error);
-		return { exists: false, error };
-	}
-};
-
 // Save user profile with interests and insights
 export const saveUserProfile = async (
 	userId: string,
