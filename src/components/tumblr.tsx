@@ -34,6 +34,9 @@ export function TopNav() {
 					</Link>
 					{user ? (
 						<>
+							<Link href="/rooms" className="text-white/85 hover:text-white">
+								feed
+							</Link>
 							<Link href={`/u/${user}`} className="text-white/85 hover:text-white">
 								my page
 							</Link>

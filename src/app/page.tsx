@@ -2,13 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { TopNav, SectionLabel } from "@/components/tumblr";
 import { chipStyle } from "@/lib/chips";
 import { getSessionUser } from "@/lib/session";
 
 export default function Landing() {
+	const router = useRouter();
 	const [user, setUser] = useState<string | null>(null);
-	useEffect(() => setUser(getSessionUser()), []);
+	useEffect(() => {
+		const u = getSessionUser();
+		setUser(u);
+		// logged-in home is the feed
+		if (u) router.replace("/rooms");
+	}, [router]);
 
 	return (
 		<div className="t-page">
