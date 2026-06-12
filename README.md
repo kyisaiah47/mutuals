@@ -1,73 +1,55 @@
 <div align="center">
 
-<img src="assets/banner.png" alt="banner" width="100%" />
+# mutuals
 
-# 🤝 Mutuals
+**find people who love what you love**
 
-**Find people who love what you love — AI-powered friend discovery through music, films, and culture**
-
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
-![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)
+culture-centered reddit, with AI taste profiles for individuality
 
 </div>
 
-<br/>
+Tell mutuals 8–10 things you love — bands, films, books, games, places — and it builds your page: an AI-written taste profile, a hand-drawn avatar you pick, and a room for every single thing. Each room is a tiny subreddit (m/radiohead, m/twinpeaks) with titled threads and comments, populated automatically by everyone who shares that thing. Matching runs on real taste overlap, and contact info only unlocks when two people wave at each other.
 
-Mutuals uses [Claude](https://claude.com) to build rich cultural fingerprints from your favorite music, movies, books, places, and more. Rather than matching on demographics or surface-level bios, it surfaces connections grounded in genuine shared taste — so every match reflects something real about who you are. The result is social discovery that feels less like a form and more like finding your people.
+## how it works
 
-## ✨ Features
+- **onboarding wizard** — type your things one at a time (they pop into colorful chips), Claude sorts them into categories, you claim `mutuals/u/yourname` with a password and pick an Open Peeps face
+- **your page** — public, shareable taste profile: AI-written headline/description/traits, your things as chips, your top 8 mutuals, and a wall for notes. Links unfurl with a generated OG card
+- **rooms** — every thing is its own forum. Threads have titles and comments; empty rooms get one AI-written starter thread the first time someone walks in
+- **matching** — weighted Jaccard similarity over your things plus Claude-expanded "taste fingerprints" (loving Radiohead also signals Portishead, Thom Yorke…)
+- **waves** — wave at someone; if they wave back, you both unlock each other's contact info
+- **activity** — waves, comments, hearts, and wall notes land in your activity feed with an unread badge
 
-- **Smart Taste Profiling** — Multi-category interest input with chip-based UI across music, films, books, places, brands, and games
-- **AI Taste Expansion** — Claude expands each interest into related entities, so matching finds semantically similar users, not just exact-keyword overlaps
-- **Social Discovery Feed** — Browse matched users ranked by taste affinity and explore their cultural profiles
-- **Chip Input System** — Comma, space, tab, and enter separators with real-time deduplication and smooth animations
-- **Dark-first UI** — Polished dark theme built with shadcn/ui, Tailwind CSS, and Framer Motion transitions
-- **Supabase Backend** — PostgreSQL-backed profile storage, interest tracking, recommendation caching, and matching queries
+## stack
 
-## 🎥 Demo
+Next.js 15 (App Router) · TypeScript · Tailwind 4 · Supabase (Postgres + Auth) · Claude (Anthropic API, haiku) · DiceBear Open Peeps
 
-[![Watch Demo](https://img.shields.io/badge/YouTube-Watch%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=-JzRYZ-BcUg)
-
-[![Demo thumbnail](https://img.youtube.com/vi/-JzRYZ-BcUg/maxresdefault.jpg)](https://www.youtube.com/watch?v=-JzRYZ-BcUg)
-
-## 🛠️ Tech Stack
-
-Next.js 15 · TypeScript · Claude (Anthropic API) · Supabase (PostgreSQL) · shadcn/ui · Tailwind CSS · Framer Motion
-
-## 🚀 Getting Started
-
-**1. Install dependencies**
+## running it
 
 ```bash
 npm install
 ```
 
-**2. Configure environment variables**
+`.env.local`:
 
 ```bash
-# Anthropic (Claude) API
-ANTHROPIC_API_KEY=your_anthropic_api_key
-
-# Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_publishable_or_anon_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
 ```
 
-**3. Set up the database**
-
-Follow the schema guide in [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
-
-**4. Run locally**
+Run the SQL in `supabase-schema.sql`, then `migration-waves-wall.sql`, `migration-avatar.sql`, `migration-rooms.sql`, and `migration-auth.sql` (Supabase SQL editor, in that order). Enable `mailer_autoconfirm` in Auth settings — accounts use synthetic emails, so no mail is ever sent.
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+## notes
 
-## 📄 License
+- identity on mutating APIs comes from the Supabase Auth bearer token, never the request body
+- pages created before auth existed can be claimed once via the login page
+- Claude-backed endpoints are IP rate-limited
+- there is no password recovery (synthetic emails) — remember your password
+
+## license
 
 MIT

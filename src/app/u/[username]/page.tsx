@@ -9,6 +9,33 @@ import { WaveBox, Wall, OwnerBar } from "./profile-client";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({
+	params,
+}: {
+	params: Promise<{ username: string }>;
+}) {
+	const { username: raw } = await params;
+	const username = decodeURIComponent(raw);
+	const { data: profile } = await getSupabase()
+		.from("user_profiles")
+		.select("taste_profile_headline, taste_profile_description")
+		.eq("user_id", username)
+		.maybeSingle();
+	if (!profile) return { title: "mutuals" };
+	return {
+		title: `${username} — mutuals`,
+		description:
+			profile.taste_profile_headline ||
+			"find people who love what you love",
+		openGraph: {
+			title: `${username} — mutuals`,
+			description:
+				profile.taste_profile_description?.slice(0, 160) ||
+				"find people who love what you love",
+		},
+	};
+}
+
 const CATEGORY_LABELS: Record<string, string> = {
 	artist: "music",
 	album: "albums",

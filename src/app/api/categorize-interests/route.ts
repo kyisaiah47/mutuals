@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText, parseJson } from "@/lib/claude";
+import { rateLimit } from "@/lib/rate-limit";
 
 const CATEGORIES = [
 	"artist",
@@ -21,6 +22,12 @@ const CATEGORIES = [
 ] as const;
 
 export async function POST(req: NextRequest) {
+	if (!rateLimit(req, "categorize", 10)) {
+		return NextResponse.json(
+			{ success: false, error: "slow down — try again in a minute" },
+			{ status: 429 }
+		);
+	}
 	try {
 		const { text } = await req.json();
 		if (!text || typeof text !== "string" || !text.trim()) {

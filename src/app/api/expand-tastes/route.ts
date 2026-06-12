@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText, parseJson } from "@/lib/claude";
+import { rateLimit } from "@/lib/rate-limit";
 
 interface ExpandedEntity {
 	entity_id: string;
@@ -16,6 +17,12 @@ const slugify = (name: string) =>
 		.replace(/^-|-$/g, "");
 
 export async function POST(req: NextRequest) {
+	if (!rateLimit(req, "expand", 10)) {
+		return NextResponse.json(
+			{ success: false, error: "slow down — try again in a minute" },
+			{ status: 429 }
+		);
+	}
 	try {
 		const { interests } = (await req.json()) as {
 			interests: Record<string, string[]>;

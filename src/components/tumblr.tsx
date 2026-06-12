@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
 import { signOutAccount } from "@/lib/auth";
+import { useActivityBadge } from "@/lib/activity";
 
 export function Logo({ size = 22, fill = "#fff" }: { size?: number; fill?: string }) {
 	return (
@@ -18,6 +19,7 @@ export function Logo({ size = 22, fill = "#fff" }: { size?: number; fill?: strin
 
 export function TopNav() {
 	const [user, setUser] = useState<string | null>(null);
+	const unread = useActivityBadge();
 	useEffect(() => setUser(getSessionUser()), []);
 
 	return (
@@ -37,6 +39,14 @@ export function TopNav() {
 						<>
 							<Link href="/rooms" className="text-white/85 hover:text-white">
 								feed
+							</Link>
+							<Link href="/activity" className="text-white/85 hover:text-white relative">
+								activity
+								{unread > 0 && (
+									<span className="absolute -top-1.5 -right-3 bg-taccent text-tnavy text-[10px] font-bold rounded-full px-1.5 leading-[16px]">
+										{unread > 9 ? "9+" : unread}
+									</span>
+								)}
 							</Link>
 							<Link href={`/u/${user}`} className="text-white/85 hover:text-white">
 								my page

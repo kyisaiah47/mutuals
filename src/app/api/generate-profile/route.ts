@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText, parseJson } from "@/lib/claude";
+import { rateLimit } from "@/lib/rate-limit";
 
 const FALLBACK_PROFILE = {
 	headline: "The Taste Explorer",
@@ -13,6 +14,12 @@ const FALLBACK_PROFILE = {
 };
 
 export async function POST(request: NextRequest) {
+	if (!rateLimit(request, "genprofile", 10)) {
+		return NextResponse.json(
+			{ success: false, error: "slow down — try again in a minute" },
+			{ status: 429 }
+		);
+	}
 	try {
 		const body = await request.json();
 		const {

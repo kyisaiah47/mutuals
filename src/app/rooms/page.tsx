@@ -8,6 +8,7 @@ import { Avatar } from "@/components/avatar";
 import { CHIP_COLORS } from "@/lib/chips";
 import { getSessionUser } from "@/lib/session";
 import { authedFetch } from "@/lib/auth";
+import { useActivityBadge } from "@/lib/activity";
 
 // every thing is a room (m/radiohead). threads have titles; replies are comments.
 
@@ -50,6 +51,7 @@ function timeAgo(iso: string) {
 
 function RoomsApp() {
 	const sp = useSearchParams();
+	const unread = useActivityBadge();
 
 	const [me, setMe] = useState<string | null>(null);
 	const [myVibe, setMyVibe] = useState<string | null>(null);
@@ -81,7 +83,24 @@ function RoomsApp() {
 		if (user) params.set("me", user);
 		if (r) params.set("room", r);
 		const res = await fetch(`/api/posts?${params}`).then((x) => x.json());
-		setThreads(res?.success ? res.data : []);
+		const data: Post[] = res?.success ? res.data : [];
+
+		// empty room + logged in → let the system account seed a starter thread
+		if (r && user && data.length === 0) {
+			const seeded = await authedFetch("/api/starter-thread", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ room: r }),
+			})
+				.then((x) => x.json())
+				.catch(() => null);
+			if (seeded?.success && seeded.data?.seeded) {
+				const again = await fetch(`/api/posts?${params}`).then((x) => x.json());
+				setThreads(again?.success ? again.data : []);
+				return;
+			}
+		}
+		setThreads(data);
 	}, []);
 
 	const loadRoomPeople = useCallback(async (r: string) => {
@@ -282,12 +301,25 @@ function RoomsApp() {
 							discover
 						</Link>
 						{me && (
-							<Link
-								href={`/u/${encodeURIComponent(me)}`}
-								className="block px-3 py-2 rounded-lg text-[15px] text-white/80 hover:bg-white/5"
-							>
-								my page
-							</Link>
+							<>
+								<Link
+									href="/activity"
+									className="flex items-center justify-between px-3 py-2 rounded-lg text-[15px] text-white/80 hover:bg-white/5"
+								>
+									activity
+									{unread > 0 && (
+										<span className="bg-taccent text-tnavy text-[11px] font-bold rounded-full px-2 leading-[18px]">
+											{unread > 9 ? "9+" : unread}
+										</span>
+									)}
+								</Link>
+								<Link
+									href={`/u/${encodeURIComponent(me)}`}
+									className="block px-3 py-2 rounded-lg text-[15px] text-white/80 hover:bg-white/5"
+								>
+									my page
+								</Link>
+							</>
 						)}
 					</div>
 
