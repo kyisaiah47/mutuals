@@ -195,6 +195,12 @@ export function Wall({ profileUser }: { profileUser: string }) {
 		load();
 	}, [load]);
 
+	const removeNote = async (id: string) => {
+		if (!window.confirm("delete this note?")) return;
+		await authedFetch(`/api/wall?id=${id}`, { method: "DELETE" });
+		load();
+	};
+
 	const post = async () => {
 		if (!draft.trim() || !me) return;
 		setPosting(true);
@@ -269,6 +275,17 @@ export function Wall({ profileUser }: { profileUser: string }) {
 							</span>
 							<br />
 							{c.body}
+							{me && (me === c.author_user_id || me === profileUser) && (
+								<>
+									{" "}
+									<button
+										onClick={() => removeNote(c.id)}
+										className="text-[11px] text-white/40 hover:text-[#ff7a70] underline"
+									>
+										delete
+									</button>
+								</>
+							)}
 						</p>
 					</div>
 				))

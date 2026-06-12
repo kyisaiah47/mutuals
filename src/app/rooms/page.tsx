@@ -64,6 +64,7 @@ function RoomsApp() {
 	const [busyRooms, setBusyRooms] = useState<{ name: string; count: number }[]>([]);
 
 	const [room, setRoom] = useState<string | null>(sp.get("room"));
+	const [navOpen, setNavOpen] = useState(false);
 	const [thread, setThread] = useState<Post | null>(null);
 	const [comments, setComments] = useState<Post[] | null>(null);
 	const [roomPeople, setRoomPeople] = useState<RoomPerson[] | null>(null);
@@ -134,6 +135,7 @@ function RoomsApp() {
 	};
 
 	const switchRoom = (r: string | null) => {
+		setNavOpen(false);
 		setRoom(r);
 		setThread(null);
 		setComments(null);
@@ -257,6 +259,19 @@ function RoomsApp() {
 		loadComments(thread.id);
 	};
 
+	const deleteThread = async (post: Post) => {
+		if (!me || !window.confirm("delete this thread?")) return;
+		await authedFetch(`/api/posts?id=${post.id}`, { method: "DELETE" });
+		if (thread?.id === post.id) closeThread();
+		loadThreads(room, me);
+	};
+
+	const deleteComment = async (c: Post, parent: Post) => {
+		if (!me || !window.confirm("delete this comment?")) return;
+		await authedFetch(`/api/posts?id=${c.id}`, { method: "DELETE" });
+		loadComments(parent.id);
+	};
+
 	const toggleHeart = async (post: Post) => {
 		if (!me) return;
 		const flip = (p: Post) =>
@@ -274,11 +289,8 @@ function RoomsApp() {
 
 	const inMyRooms = room && myThings.some((t) => t.toLowerCase() === room.toLowerCase());
 
-	return (
-		<div className="min-h-screen bg-tnavy text-white font-['Helvetica_Neue',Helvetica,Arial,sans-serif]">
-			<div className="max-w-[1180px] mx-auto grid grid-cols-[220px_minmax(0,630px)_280px] max-lg:grid-cols-[220px_1fr] max-md:grid-cols-1 gap-8 px-4">
-				{/* ===== left nav ===== */}
-				<nav className="max-md:hidden sticky top-0 h-screen pt-6 flex flex-col">
+	const navInner = (
+		<>
 					<Link href="/" className="flex items-center gap-2 px-3 mb-7">
 						<Logo size={26} />
 						<span className="font-extrabold text-[20px] tracking-tight">mutuals</span>
@@ -378,6 +390,52 @@ function RoomsApp() {
 							</Link>
 						)}
 					</div>
+		</>
+	);
+
+	return (
+		<div className="min-h-screen bg-tnavy text-white font-['Helvetica_Neue',Helvetica,Arial,sans-serif]">
+			{/* mobile top bar */}
+			<div className="md:hidden sticky top-0 z-30 bg-tnavy/95 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between">
+				<Link href="/" className="flex items-center gap-2">
+					<Logo size={22} />
+					<span className="font-extrabold text-[18px]">mutuals</span>
+				</Link>
+				<button
+					onClick={() => setNavOpen(true)}
+					aria-label="open menu"
+					className="text-white text-[22px] leading-none px-1"
+				>
+					☰
+				</button>
+			</div>
+
+			{/* mobile drawer */}
+			{navOpen && (
+				<div
+					className="md:hidden fixed inset-0 z-40 bg-black/60"
+					onClick={() => setNavOpen(false)}
+				>
+					<div
+						className="absolute left-0 top-0 bottom-0 w-[280px] bg-tnavy border-r border-white/15 px-3 pb-4 pt-2 overflow-y-auto flex flex-col"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<button
+							onClick={() => setNavOpen(false)}
+							aria-label="close menu"
+							className="self-end text-white/60 hover:text-white text-[20px] px-2 py-1"
+						>
+							✕
+						</button>
+						{navInner}
+					</div>
+				</div>
+			)}
+
+			<div className="max-w-[1180px] mx-auto grid grid-cols-[220px_minmax(0,630px)_280px] max-lg:grid-cols-[220px_1fr] max-md:grid-cols-1 gap-8 px-4">
+				{/* ===== left nav ===== */}
+				<nav className="max-md:hidden sticky top-0 h-screen pt-6 flex flex-col">
+					{navInner}
 				</nav>
 
 				{/* ===== center ===== */}
@@ -435,14 +493,22 @@ function RoomsApp() {
 								<p className="text-[15px] text-white/90 leading-relaxed mt-2.5 whitespace-pre-wrap">
 									{thread.body}
 								</p>
-								<button
-									onClick={() => toggleHeart(thread)}
-									className={`mt-3.5 text-[13px] ${
-										thread.hearted ? "text-[#ff8fc1]" : "text-white/50 hover:text-[#ff8fc1]"
-									}`}
-								>
-									♥ {thread.hearts}
-								</button>
+								<div className="mt-3.5 flex gap-5 text-[13px]">
+									<button
+										onClick={() => toggleHeart(thread)}
+										className={thread.hearted ? "text-[#ff8fc1]" : "text-white/50 hover:text-[#ff8fc1]"}
+									>
+										♥ {thread.hearts}
+									</button>
+									{me === thread.author && (
+										<button
+											onClick={() => deleteThread(thread)}
+											className="text-white/40 hover:text-[#ff7a70]"
+										>
+											delete
+										</button>
+									)}
+								</div>
 							</div>
 
 							{/* comments */}
@@ -508,6 +574,14 @@ function RoomsApp() {
 													<p className="text-[14.5px] text-white/90 leading-relaxed mt-0.5">
 														{c.body}
 													</p>
+													{me === c.author && thread && (
+														<button
+															onClick={() => deleteComment(c, thread)}
+															className="text-[11px] text-white/40 hover:text-[#ff7a70] mt-1"
+														>
+															delete
+														</button>
+													)}
 												</div>
 											</div>
 										))}
@@ -688,6 +762,17 @@ function RoomsApp() {
 											>
 												♥ {p.hearts}
 											</button>
+											{me === p.author && (
+												<button
+													onClick={(e) => {
+														e.stopPropagation();
+														deleteThread(p);
+													}}
+													className="text-white/40 hover:text-[#ff7a70]"
+												>
+													delete
+												</button>
+											)}
 										</div>
 									</article>
 								))

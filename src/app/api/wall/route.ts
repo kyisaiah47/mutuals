@@ -74,3 +74,33 @@ export async function POST(req: NextRequest) {
 		return NextResponse.json({ success: false }, { status: 500 });
 	}
 }
+
+export async function DELETE(req: NextRequest) {
+	try {
+		const me = await getAuthedUsername(req);
+		if (!me) {
+			return NextResponse.json({ success: false, error: "log in first" }, { status: 401 });
+		}
+		const id = req.nextUrl.searchParams.get("id");
+		if (!id) {
+			return NextResponse.json({ success: false, error: "id required" }, { status: 400 });
+		}
+
+		// authors can delete their notes; page owners can sweep their own wall
+		const { data, error } = await getSupabase()
+			.from("wall_comments")
+			.delete()
+			.eq("id", id)
+			.or(`author_user_id.eq.${me},profile_user_id.eq.${me}`)
+			.select("id")
+			.maybeSingle();
+		if (error) throw error;
+		if (!data) {
+			return NextResponse.json({ success: false, error: "not yours" }, { status: 403 });
+		}
+		return NextResponse.json({ success: true });
+	} catch (err) {
+		console.error("wall DELETE error:", err);
+		return NextResponse.json({ success: false }, { status: 500 });
+	}
+}
