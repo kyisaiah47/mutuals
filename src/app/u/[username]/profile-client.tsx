@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
-import { PostCard, Spinner } from "@/components/tumblr";
+import { Spinner } from "@/components/tumblr";
 import { Avatar } from "@/components/avatar";
 
 export function OwnerBar({ username }: { username: string }) {
@@ -21,7 +21,7 @@ export function OwnerBar({ username }: { username: string }) {
 	return (
 		<>
 			{copied && (
-				<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white text-tnavy text-[13px] font-bold px-4 py-2 rounded-full shadow-lg anim-fadeup">
+				<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white text-tnavy text-[13px] font-bold px-5 py-2 rounded-full shadow-lg anim-fadeup">
 					link copied — go share your page
 				</div>
 			)}
@@ -112,7 +112,7 @@ export function WaveBox({ profileUser }: { profileUser: string }) {
 					<button
 						onClick={wave}
 						disabled={busy}
-						className="bg-taccent text-white font-bold px-4 py-1.5 rounded hover:opacity-90 disabled:opacity-50 shrink-0 ml-3"
+						className="bg-taccent text-white font-bold px-5 py-1.5 rounded-full hover:opacity-90 disabled:opacity-50 shrink-0 ml-3"
 					>
 						{busy ? "…" : "wave"}
 					</button>
@@ -175,9 +175,10 @@ export function Wall({ profileUser }: { profileUser: string }) {
 	};
 
 	return (
-		<PostCard
-			label={`${comments?.length ?? "…"} notes on ${profileUser}`}
-		>
+		<section>
+			<p className="text-white/60 text-[12px] uppercase tracking-widest border-b border-white/15 pb-2 mb-4">
+				{comments?.length ?? "…"} notes on {profileUser}
+			</p>
 			{me && me !== profileUser && (
 				<div className="flex gap-2 mb-4">
 					<input
@@ -186,12 +187,12 @@ export function Wall({ profileUser }: { profileUser: string }) {
 						onKeyDown={(e) => e.key === "Enter" && !posting && post()}
 						placeholder="leave a note…"
 						maxLength={280}
-						className="flex-1 border border-tline rounded px-3 py-2 text-[14px] outline-none focus:border-taccent"
+						className="flex-1 bg-white/5 border border-white/15 text-white rounded-full px-4 py-2 text-[14px] outline-none focus:border-white/50 placeholder:text-white/35"
 					/>
 					<button
 						onClick={post}
 						disabled={posting || !draft.trim()}
-						className="bg-taccent text-white text-[13px] font-bold px-4 rounded hover:opacity-90 disabled:opacity-40"
+						className="bg-taccent text-white text-[13px] font-bold px-5 rounded-full hover:opacity-90 disabled:opacity-40"
 					>
 						post
 					</button>
@@ -200,24 +201,24 @@ export function Wall({ profileUser }: { profileUser: string }) {
 			{comments === null ? (
 				<Spinner label="loading notes…" />
 			) : comments.length === 0 ? (
-				<p className="text-[14px] text-tmuted">
+				<p className="text-[14px] text-white/70">
 					no notes yet{me && me !== profileUser ? " — be the first" : ""}.
 				</p>
 			) : (
 				comments.map((c) => (
 					<div
 						key={c.id}
-						className="flex gap-2.5 py-2.5 border-t border-[#f0f0f0] first:border-t-0"
+						className="flex gap-2.5 py-3 border-t border-white/10 first:border-t-0"
 					>
 						<Avatar seed={c.author_avatar} emoji={c.author_emoji} size={32} />
-						<p className="text-[13px] leading-relaxed min-w-0">
+						<p className="text-[13px] leading-relaxed min-w-0 text-white/90">
 							<Link
 								href={`/u/${encodeURIComponent(c.author_user_id)}`}
-								className="font-bold text-tink hover:text-tlink"
+								className="font-bold text-white hover:underline"
 							>
 								{c.author_user_id}
 							</Link>{" "}
-							<span className="text-tfaint">
+							<span className="text-white/50">
 								{new Date(c.created_at)
 									.toLocaleDateString("en-US", {
 										month: "short",
@@ -231,6 +232,6 @@ export function Wall({ profileUser }: { profileUser: string }) {
 					</div>
 				))
 			)}
-		</PostCard>
+		</section>
 	);
 }

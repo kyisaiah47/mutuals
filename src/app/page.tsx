@@ -28,7 +28,7 @@ export default function Landing() {
 							<div className="mt-6 flex items-center justify-center gap-3">
 								<Link
 									href="/discover"
-									className="bg-taccent text-white font-bold text-[14px] px-5 py-2.5 rounded hover:opacity-90"
+									className="bg-taccent text-white font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90"
 								>
 									discover people
 								</Link>
@@ -50,7 +50,7 @@ export default function Landing() {
 							<div className="mt-6 flex items-center justify-center gap-3">
 								<Link
 									href="/start"
-									className="bg-taccent text-white font-bold text-[14px] px-5 py-2.5 rounded hover:opacity-90"
+									className="bg-taccent text-white font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90"
 								>
 									make your page
 								</Link>
@@ -84,7 +84,7 @@ export default function Landing() {
 						soundtracks that blur the line between beauty and unease. You
 						don&apos;t just consume art — you interrogate it.
 					</p>
-					<p className="text-[13px] mt-3.5 text-tmuted">
+					<p className="text-[13px] mt-3.5 text-white/60">
 						#obsessively-pattern-seeking #emotionally-cerebral
 						#aesthetically-driven
 					</p>
@@ -93,15 +93,15 @@ export default function Landing() {
 				<PostCard author="isaiah" label="things i love">
 					<p className="text-[15px] leading-relaxed mb-2">
 						<strong>music:</strong>{" "}
-						<span className="text-tlink">Radiohead, Portishead, Björk</span>
+						<span className="text-[#9fef00]">Radiohead</span>, <span className="text-[#ffb02e]">Portishead</span>, <span className="text-[#b18cff]">Björk</span>
 					</p>
 					<p className="text-[15px] leading-relaxed mb-2">
 						<strong>movies:</strong>{" "}
-						<span className="text-tlink">Inception, Memento, Primer</span>
+						<span className="text-[#2dd4a8]">Inception</span>, <span className="text-[#ff8fc1]">Memento</span>, <span className="text-[#9fef00]">Primer</span>
 					</p>
 					<p className="text-[15px] leading-relaxed">
 						<strong>books:</strong>{" "}
-						<span className="text-tlink">House of Leaves, Borges</span>
+						<span className="text-[#ffb02e]">House of Leaves</span>, <span className="text-[#b18cff]">Borges</span>
 					</p>
 				</PostCard>
 

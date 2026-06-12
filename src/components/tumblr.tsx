@@ -54,7 +54,7 @@ export function TopNav() {
 							</Link>
 							<Link
 								href="/start"
-								className="bg-white text-tnavy font-bold px-3 py-1.5 rounded hover:opacity-90"
+								className="bg-white text-tnavy font-bold px-4 py-1.5 rounded-full hover:opacity-90"
 							>
 								make your page
 							</Link>
@@ -78,11 +78,11 @@ export function PostCard({
 	children: React.ReactNode;
 }) {
 	return (
-		<article className="bg-tcard text-tink rounded mb-6">
+		<article className="bg-white/5 border border-white/10 text-white rounded-lg mb-6">
 			<div className="px-5 py-4">
 				{(author || label) && (
-					<p className="text-[13px] text-tmuted mb-2.5">
-						{author && <strong className="text-tink">{author}</strong>}
+					<p className="text-[13px] text-white/70 mb-2.5">
+						{author && <strong className="text-white">{author}</strong>}
 						{author && label && " · "}
 						{label}
 					</p>
@@ -90,7 +90,7 @@ export function PostCard({
 				{children}
 			</div>
 			{footer && (
-				<div className="border-t border-tline px-5 py-2.5 text-[13px] text-tmuted flex justify-between">
+				<div className="border-t border-white/10 px-5 py-2.5 text-[13px] text-white/70 flex justify-between">
 					{footer}
 				</div>
 			)}
@@ -98,11 +98,18 @@ export function PostCard({
 	);
 }
 
+export function SectionLabel({ children }: { children: React.ReactNode }) {
+	return (
+		<p className="text-white/60 text-[12px] uppercase tracking-widest border-b border-white/15 pb-2 mb-4">
+			{children}
+		</p>
+	);
+}
 
 export function Spinner({ label }: { label?: string }) {
 	return (
-		<span className="inline-flex items-center gap-2 text-tmuted text-[13px]">
-			<span className="w-3.5 h-3.5 border-2 border-taccent border-t-transparent rounded-full animate-spin inline-block" />
+		<span className="inline-flex items-center gap-2 text-white/70 text-[13px]">
+			<span className="w-3.5 h-3.5 border-2 border-white/60 border-t-transparent rounded-full animate-spin inline-block" />
 			{label}
 		</span>
 	);
