@@ -24,9 +24,32 @@ export async function generateText(
 	return block.type === "text" ? block.text : "";
 }
 
-// Extracts the first JSON object from a model response
+// Extracts the first complete JSON object from a model response,
+// tolerating prose before/after it (a greedy regex breaks on trailing braces)
 export function parseJson<T>(text: string): T {
-	const match = text.match(/\{[\s\S]*\}/);
-	if (!match) throw new Error("No JSON found in model response");
-	return JSON.parse(match[0]) as T;
+	const start = text.indexOf("{");
+	if (start === -1) throw new Error("No JSON found in model response");
+
+	let depth = 0;
+	let inString = false;
+	let escaped = false;
+	for (let i = start; i < text.length; i++) {
+		const ch = text[i];
+		if (escaped) {
+			escaped = false;
+		} else if (ch === "\\") {
+			escaped = true;
+		} else if (ch === '"') {
+			inString = !inString;
+		} else if (!inString) {
+			if (ch === "{") depth++;
+			else if (ch === "}") {
+				depth--;
+				if (depth === 0) {
+					return JSON.parse(text.slice(start, i + 1)) as T;
+				}
+			}
+		}
+	}
+	throw new Error("Unbalanced JSON in model response");
 }

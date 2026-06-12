@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { findSimilarUsers } from "@/lib/database";
-import { TopNav, PostCard, EmojiTile } from "@/components/tumblr";
+import { TopNav, PostCard } from "@/components/tumblr";
+import { Avatar } from "@/components/avatar";
 import { WaveBox, Wall, OwnerBar } from "./profile-client";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +62,7 @@ export default async function ProfilePage({
 		.map((m) => ({
 			name: m.user.user_id,
 			emoji: m.user.emoji || "👤",
+			avatar: (m.user as { avatar?: string | null }).avatar || null,
 			match: Math.round(m.matchScore * 100),
 		}));
 
@@ -75,15 +77,15 @@ export default async function ProfilePage({
 				{/* header */}
 				<div className="text-center mb-8">
 					<div className="flex justify-center mb-3">
-						<EmojiTile emoji={profile.emoji || "🌀"} size={96} />
+						<Avatar seed={profile.avatar} emoji={profile.emoji || "🌀"} size={96} />
 					</div>
 					<h1 className="text-white text-[20px] font-bold">{username}</h1>
 					{profile.taste_profile_headline && (
-						<p className="text-white/65 text-[14px] mt-1">
+						<p className="text-white/85 text-[14px] mt-1">
 							{profile.taste_profile_headline.toLowerCase()}
 						</p>
 					)}
-					<p className="text-white/45 text-[13px] mt-1.5">
+					<p className="text-white/75 text-[13px] mt-1.5">
 						{topMutuals.length > 0 && (
 							<>{matchResult.success ? matchResult.similarUsers?.length : 0} mutuals · </>
 						)}
@@ -121,7 +123,7 @@ export default async function ProfilePage({
 						{Object.entries(grouped).map(([label, items]) => (
 							<p key={label} className="text-[15px] leading-loose mb-1.5">
 								<strong>{label}:</strong>{" "}
-								<span className="text-taccent">{items.join(", ")}</span>
+								<span className="text-tlink">{items.join(", ")}</span>
 							</p>
 						))}
 					</PostCard>
@@ -146,8 +148,12 @@ export default async function ProfilePage({
 									href={`/u/${encodeURIComponent(mu.name)}`}
 									className="text-center group"
 								>
-									<div className="aspect-square bg-[#f0f2f5] rounded-[3px] flex items-center justify-center text-[34px] group-hover:bg-[#e2e8f0]">
-										{mu.emoji}
+									<div className="aspect-square bg-[#f0f2f5] rounded-[3px] flex items-center justify-center text-[34px] group-hover:bg-[#e2e8f0] overflow-hidden">
+										{mu.avatar ? (
+											<Avatar seed={mu.avatar} size={96} className="w-full h-auto" />
+										) : (
+											mu.emoji
+										)}
 									</div>
 									<p className="text-[11px] text-tmuted mt-1.5 truncate">
 										{mu.name}

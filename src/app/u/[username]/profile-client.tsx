@@ -4,26 +4,42 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
 import { PostCard, Spinner } from "@/components/tumblr";
+import { Avatar } from "@/components/avatar";
 
 export function OwnerBar({ username }: { username: string }) {
 	const [isOwner, setIsOwner] = useState(false);
+	const [copied, setCopied] = useState(false);
 	useEffect(() => setIsOwner(getSessionUser() === username), [username]);
 	if (!isOwner) return null;
+
+	const copy = async () => {
+		await navigator.clipboard.writeText(window.location.href);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2000);
+	};
+
 	return (
-		<div className="mb-6 flex items-center justify-between bg-white/8 border border-white/15 rounded px-4 py-2.5 text-[13px]">
-			<span className="text-white/70">this is your page</span>
-			<div className="flex gap-4">
-				<Link href="/edit" className="text-taccent hover:underline">
-					edit your things
-				</Link>
-				<button
-					onClick={() => navigator.clipboard.writeText(window.location.href)}
-					className="text-taccent hover:underline"
-				>
-					copy link
-				</button>
+		<>
+			{copied && (
+				<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white text-tnavy text-[13px] font-bold px-4 py-2 rounded-full shadow-lg anim-fadeup">
+					link copied — go share your page
+				</div>
+			)}
+			<div className="mb-6 flex items-center justify-between bg-white/8 border border-white/15 rounded px-4 py-2.5 text-[13px]">
+				<span className="text-white/70">this is your page</span>
+				<div className="flex gap-4">
+					<Link href="/edit" className="text-white/80 underline hover:text-white">
+						edit your things
+					</Link>
+					<button
+						onClick={copy}
+						className="text-white/80 underline hover:text-white"
+					>
+						{copied ? "copied!" : "copy link"}
+					</button>
+				</div>
 			</div>
-		</div>
+		</>
 	);
 }
 
@@ -76,21 +92,21 @@ export function WaveBox({ profileUser }: { profileUser: string }) {
 					{state.contact ? (
 						<>
 							reach them at{" "}
-							<strong className="text-taccent">{state.contact}</strong>
+							<strong className="text-white">{state.contact}</strong>
 						</>
 					) : (
-						<span className="text-white/50">
+						<span className="text-white/80">
 							(they haven&apos;t added contact info)
 						</span>
 					)}
 				</span>
 			) : state?.waved ? (
-				<span className="text-white/60">
+				<span className="text-white/80">
 					you waved — if they wave back, contact unlocks
 				</span>
 			) : (
 				<>
-					<span className="text-white/60">
+					<span className="text-white/80">
 						like their taste? wave — if it&apos;s mutual, contact unlocks
 					</span>
 					<button
@@ -110,6 +126,7 @@ interface WallComment {
 	id: string;
 	author_user_id: string;
 	author_emoji?: string;
+	author_avatar?: string;
 	body: string;
 	created_at: string;
 }
@@ -192,13 +209,11 @@ export function Wall({ profileUser }: { profileUser: string }) {
 						key={c.id}
 						className="flex gap-2.5 py-2.5 border-t border-[#f0f0f0] first:border-t-0"
 					>
-						<div className="w-8 h-8 bg-[#f0f2f5] rounded-[3px] flex items-center justify-center text-[16px] shrink-0">
-							{c.author_emoji || "👤"}
-						</div>
+						<Avatar seed={c.author_avatar} emoji={c.author_emoji} size={32} />
 						<p className="text-[13px] leading-relaxed min-w-0">
 							<Link
 								href={`/u/${encodeURIComponent(c.author_user_id)}`}
-								className="font-bold text-tink hover:text-taccent"
+								className="font-bold text-tink hover:text-tlink"
 							>
 								{c.author_user_id}
 							</Link>{" "}

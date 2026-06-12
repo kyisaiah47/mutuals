@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TopNav, Logo } from "@/components/tumblr";
+import { Avatar } from "@/components/avatar";
 import { setSessionUser } from "@/lib/session";
+
+const randSeed = () => Math.random().toString(36).slice(2, 10);
 
 type Interests = Record<string, string[]>;
 
@@ -26,7 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 	tag: "vibes",
 };
 
-const CHIP_COLORS = ["#ff6250", "#ffb02e", "#2dd4a8", "#b18cff", "#ff8fc1"];
+const CHIP_COLORS = ["#9fef00", "#ffb02e", "#2dd4a8", "#b18cff", "#ff8fc1"];
 
 function chipStyle(i: number): React.CSSProperties {
 	const rot = ((i * 7919) % 7) - 3; // deterministic -3..3deg
@@ -75,7 +78,22 @@ export default function Start() {
 	const [error, setError] = useState("");
 	const [loadingMsgs, setLoadingMsgs] = useState<string[] | null>(null);
 	const [suggesting, setSuggesting] = useState(false);
+	const [avatarSeeds, setAvatarSeeds] = useState<string[]>([]);
+	const [avatarSeed, setAvatarSeed] = useState<string | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	// seeds are random — generate after mount to avoid hydration mismatch
+	useEffect(() => {
+		const seeds = Array.from({ length: 16 }, randSeed);
+		setAvatarSeeds(seeds);
+		setAvatarSeed(seeds[0]);
+	}, []);
+
+	const shuffleAvatars = () => {
+		const seeds = Array.from({ length: 16 }, randSeed);
+		setAvatarSeeds(seeds);
+		setAvatarSeed(seeds[0]);
+	};
 
 	const addThings = (raw: string) => {
 		const parts = raw
@@ -196,6 +214,7 @@ export default function Start() {
 					interests,
 					insights,
 					contact: contact.trim() || undefined,
+					avatar: avatarSeed || undefined,
 				}),
 			});
 			if (!(await saveRes.json()).success) throw new Error("save failed");
@@ -232,19 +251,19 @@ export default function Start() {
 			<main className="max-w-[640px] mx-auto px-4 pt-14 pb-24">
 				{step === "add" && (
 					<div className="anim-fadeup">
-						<p className="text-center text-taccent text-[13px] font-bold tracking-widest uppercase mb-2">
+						<p className="text-center text-white/70 text-[13px] font-bold tracking-widest uppercase mb-2">
 							step 1 of 3
 						</p>
 						<h1 className="text-center text-white text-[32px] font-extrabold mb-2">
 							what do you love?
 						</h1>
-						<p className="text-center text-white/50 text-[15px] mb-10">
+						<p className="text-center text-white/80 text-[15px] mb-10">
 							bands, films, books, games, shows, places — one at a time, hit
 							enter after each.
 						</p>
 
 						{/* big input */}
-						<div className="border-b-2 border-white/25 focus-within:border-taccent transition-colors mb-3">
+						<div className="border-b-2 border-white/25 focus-within:border-white/70 transition-colors mb-3">
 							<input
 								ref={inputRef}
 								value={input}
@@ -261,7 +280,7 @@ export default function Start() {
 									}
 								}}
 								placeholder={count === 0 ? "radiohead" : "what else?"}
-								className="w-full bg-transparent text-white text-[26px] text-center py-3 outline-none placeholder:text-white/20"
+								className="w-full bg-transparent text-white text-[26px] text-center py-3 outline-none placeholder:text-white/35"
 								autoFocus
 							/>
 						</div>
@@ -280,7 +299,7 @@ export default function Start() {
 								/>
 							))}
 						</div>
-						<p className="text-center text-white/45 text-[13px] mb-8">
+						<p className="text-center text-white/75 text-[13px] mb-8">
 							{encouragement(count)}
 						</p>
 
@@ -300,7 +319,7 @@ export default function Start() {
 						</div>
 
 						{error && (
-							<p className="text-center text-taccent text-[13px] mb-4">{error}</p>
+							<p className="text-center text-[#ff7a70] text-[13px] mb-4">{error}</p>
 						)}
 						{count >= 3 && (
 							<div className="text-center anim-fadeup">
@@ -317,17 +336,17 @@ export default function Start() {
 
 				{step === "confirm" && (
 					<div className="anim-fadeup">
-						<p className="text-center text-taccent text-[13px] font-bold tracking-widest uppercase mb-2">
+						<p className="text-center text-white/70 text-[13px] font-bold tracking-widest uppercase mb-2">
 							step 2 of 3
 						</p>
 						<h1 className="text-center text-white text-[32px] font-extrabold mb-2">
 							here&apos;s what we got
 						</h1>
-						<p className="text-center text-white/50 text-[15px] mb-10">
+						<p className="text-center text-white/80 text-[15px] mb-10">
 							click anything that&apos;s wrong to remove it ·{" "}
 							<button
 								onClick={() => setStep("add")}
-								className="text-taccent hover:underline"
+								className="text-white/80 underline hover:text-white"
 							>
 								← go back
 							</button>
@@ -340,7 +359,7 @@ export default function Start() {
 									className="anim-fadeup"
 									style={{ animationDelay: `${gi * 0.1}s` }}
 								>
-									<p className="text-center text-white/40 text-[12px] uppercase tracking-widest mb-3">
+									<p className="text-center text-white/70 text-[12px] uppercase tracking-widest mb-3">
 										{CATEGORY_LABELS[cat] || cat}
 									</p>
 									<div className="flex flex-wrap justify-center gap-2.5">
@@ -373,18 +392,18 @@ export default function Start() {
 
 				{step === "claim" && (
 					<div className="anim-fadeup max-w-[480px] mx-auto">
-						<p className="text-center text-taccent text-[13px] font-bold tracking-widest uppercase mb-2">
+						<p className="text-center text-white/70 text-[13px] font-bold tracking-widest uppercase mb-2">
 							step 3 of 3
 						</p>
 						<h1 className="text-center text-white text-[32px] font-extrabold mb-2">
 							claim your page
 						</h1>
-						<p className="text-center text-white/50 text-[15px] mb-10">
+						<p className="text-center text-white/80 text-[15px] mb-10">
 							this is your corner of the internet now
 						</p>
 
-						<div className="flex items-baseline justify-center gap-0 border-b-2 border-white/25 focus-within:border-taccent transition-colors mb-3">
-							<span className="text-white/35 text-[22px]">mutuals/u/</span>
+						<div className="flex items-baseline justify-center gap-0 border-b-2 border-white/25 focus-within:border-white/70 transition-colors mb-3">
+							<span className="text-white/80 text-[22px]">mutuals/u/</span>
 							<input
 								value={username}
 								onChange={(e) => {
@@ -393,31 +412,60 @@ export default function Start() {
 								}}
 								onKeyDown={(e) => e.key === "Enter" && create()}
 								placeholder="yourname"
-								className="bg-transparent text-white text-[22px] py-3 outline-none placeholder:text-white/20 min-w-0 flex-1"
+								className="bg-transparent text-white text-[22px] py-3 outline-none placeholder:text-white/35 min-w-0 flex-1"
 								autoFocus
 							/>
 							<button
 								onClick={suggestUsername}
 								disabled={suggesting}
 								title="suggest one from your taste"
-								className="text-taccent text-[14px] hover:underline disabled:opacity-50 shrink-0"
+								className="text-white/80 text-[14px] hover:text-white disabled:opacity-50 shrink-0"
 							>
 								{suggesting ? "…" : "suggest"}
 							</button>
 						</div>
 
-						<label className="block text-white/40 text-[13px] mt-8 mb-1.5">
+						<div className="mt-10">
+							<div className="flex items-center justify-between mb-3">
+								<span className="text-white/70 text-[13px]">
+									pick your face
+								</span>
+								<button
+									onClick={shuffleAvatars}
+									className="text-white/80 text-[13px] underline hover:text-white"
+								>
+									shuffle
+								</button>
+							</div>
+							<div className="grid grid-cols-8 max-sm:grid-cols-4 gap-2">
+								{avatarSeeds.map((s) => (
+									<button
+										key={s}
+										onClick={() => setAvatarSeed(s)}
+										className={`rounded-md overflow-hidden transition-transform hover:scale-105 ${
+											avatarSeed === s
+												? "ring-[3px] ring-white scale-105"
+												: "opacity-80 hover:opacity-100"
+										}`}
+									>
+										<Avatar seed={s} size={52} className="w-full h-auto" />
+									</button>
+								))}
+							</div>
+						</div>
+
+						<label className="block text-white/70 text-[13px] mt-8 mb-1.5">
 							contact (optional) — only revealed to mutual waves
 						</label>
 						<input
 							value={contact}
 							onChange={(e) => setContact(e.target.value)}
 							placeholder="email, IG, discord — whatever you want"
-							className="w-full bg-transparent border-b-2 border-white/25 focus:border-taccent transition-colors text-white text-[16px] py-2 outline-none placeholder:text-white/20"
+							className="w-full bg-transparent border-b-2 border-white/25 focus:border-white/70 transition-colors text-white text-[16px] py-2 outline-none placeholder:text-white/35"
 						/>
 
 						{error && (
-							<p className="text-center text-taccent text-[13px] mt-6">{error}</p>
+							<p className="text-center text-[#ff7a70] text-[13px] mt-6">{error}</p>
 						)}
 						<div className="text-center mt-10">
 							<button
@@ -429,7 +477,7 @@ export default function Start() {
 							<p className="mt-4">
 								<button
 									onClick={() => setStep("confirm")}
-									className="text-white/40 text-[13px] hover:text-white"
+									className="text-white/70 text-[13px] hover:text-white"
 								>
 									← back
 								</button>

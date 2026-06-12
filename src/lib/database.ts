@@ -31,7 +31,8 @@ export const saveUserProfile = async (
 	userId: string,
 	interests: Record<string, string[]>,
 	insights: Record<string, InsightItem[]>,
-	contact?: string
+	contact?: string,
+	avatar?: string
 ) => {
 	try {
 		// First, save the main profile
@@ -42,6 +43,7 @@ export const saveUserProfile = async (
 				interests,
 				insights,
 				contact: contact || null,
+				avatar: avatar || null,
 				profile_completed: true,
 				updated_at: new Date().toISOString(),
 			})
@@ -269,6 +271,7 @@ export const findSimilarUsers = async (userId: string) => {
 					user: {
 						user_id: otherUser.user_id,
 						emoji: otherUser.emoji || null,
+					avatar: otherUser.avatar || null,
 						ai_profile: otherUser.taste_profile_headline
 							? {
 									headline: otherUser.taste_profile_headline,

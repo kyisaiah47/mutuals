@@ -4,7 +4,7 @@ import { saveUserProfile, generateUserId } from "@/lib/database";
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { userId, interests, insights, contact } = body;
+		const { userId, interests, insights, contact, avatar } = body;
 
 		// Generate a new user ID if not provided
 		const finalUserId = userId || generateUserId();
@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
 			finalUserId,
 			interests,
 			insights,
-			contact
+			contact,
+			avatar
 		);
 
 		if (result.success) {

@@ -19,16 +19,16 @@ export async function GET(req: NextRequest) {
 			.limit(50);
 		if (error) throw error;
 
-		// attach author emojis
+		// attach author emojis/avatars
 		const authors = [...new Set((comments || []).map((c) => c.author_user_id))];
-		const emojiByUser: Record<string, string> = {};
+		const byUser: Record<string, { emoji?: string; avatar?: string }> = {};
 		if (authors.length > 0) {
 			const { data: profiles } = await getSupabase()
 				.from("user_profiles")
-				.select("user_id, emoji")
+				.select("user_id, emoji, avatar")
 				.in("user_id", authors);
 			for (const p of profiles || []) {
-				if (p.emoji) emojiByUser[p.user_id] = p.emoji;
+				byUser[p.user_id] = { emoji: p.emoji, avatar: p.avatar };
 			}
 		}
 
@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
 			success: true,
 			data: (comments || []).map((c) => ({
 				...c,
-				author_emoji: emojiByUser[c.author_user_id],
+				author_emoji: byUser[c.author_user_id]?.emoji,
+				author_avatar: byUser[c.author_user_id]?.avatar,
 			})),
 		});
 	} catch (err) {

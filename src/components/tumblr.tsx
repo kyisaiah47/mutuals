@@ -42,7 +42,7 @@ export function TopNav() {
 									clearSession();
 									window.location.href = "/";
 								}}
-								className="text-white/50 hover:text-white"
+								className="text-white/80 hover:text-white"
 							>
 								log out
 							</button>
@@ -52,8 +52,11 @@ export function TopNav() {
 							<Link href="/login" className="text-white/85 hover:text-white">
 								log in
 							</Link>
-							<Link href="/start" className="text-taccent hover:underline">
-								+ make your page
+							<Link
+								href="/start"
+								className="bg-white text-tnavy font-bold px-3 py-1.5 rounded hover:opacity-90"
+							>
+								make your page
 							</Link>
 						</>
 					)}
@@ -95,28 +98,6 @@ export function PostCard({
 	);
 }
 
-export function EmojiTile({
-	emoji,
-	size = 96,
-	light = false,
-}: {
-	emoji: string;
-	size?: number;
-	light?: boolean;
-}) {
-	return (
-		<div
-			className={
-				light
-					? "bg-[#f0f2f5] rounded-[3px] flex items-center justify-center"
-					: "bg-tnavy-light border border-white/15 rounded flex items-center justify-center"
-			}
-			style={{ width: size, height: size, fontSize: size / 2 }}
-		>
-			{emoji}
-		</div>
-	);
-}
 
 export function Spinner({ label }: { label?: string }) {
 	return (

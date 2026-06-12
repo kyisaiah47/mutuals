@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { TopNav, PostCard, Spinner } from "@/components/tumblr";
+import { TopNav, Spinner } from "@/components/tumblr";
 import { setSessionUser } from "@/lib/session";
 
 export default function Login() {
@@ -40,14 +40,16 @@ export default function Login() {
 	return (
 		<div className="t-page">
 			<TopNav />
-			<main className="max-w-[540px] mx-auto px-4 pt-12 pb-20">
-				<h1 className="text-center text-white text-[22px] font-extrabold mb-6">
+			<main className="max-w-[480px] mx-auto px-4 pt-24 pb-20 anim-fadeup">
+				<h1 className="text-center text-white text-[32px] font-extrabold mb-2">
 					welcome back
 				</h1>
-				<PostCard>
-					<label className="text-[13px] text-tmuted block mb-1.5">
-						your username
-					</label>
+				<p className="text-center text-white/80 text-[15px] mb-12">
+					your page missed you
+				</p>
+
+				<div className="flex items-baseline justify-center border-b-2 border-white/25 focus-within:border-white/70 transition-colors mb-3">
+					<span className="text-white/80 text-[22px]">mutuals/u/</span>
 					<input
 						value={username}
 						onChange={(e) => {
@@ -55,25 +57,30 @@ export default function Login() {
 							setError("");
 						}}
 						onKeyDown={(e) => e.key === "Enter" && !loading && login()}
-						placeholder="the name on your page"
-						className="w-full border border-tline rounded px-3 py-2 text-[15px] outline-none focus:border-taccent"
+						placeholder="yourname"
+						className="bg-transparent text-white text-[22px] py-3 outline-none placeholder:text-white/35 min-w-0 flex-1"
 						autoFocus
 					/>
-					{error && <p className="text-red-500 text-[13px] mt-2">{error}</p>}
+				</div>
+				{error && (
+					<p className="text-center text-[#ff7a70] text-[13px] mt-4">{error}</p>
+				)}
+
+				<div className="text-center mt-10">
 					<button
 						onClick={login}
 						disabled={loading}
-						className="mt-4 w-full bg-taccent text-white font-bold text-[14px] py-2.5 rounded hover:opacity-90 disabled:opacity-50"
+						className="bg-white text-tnavy font-bold text-[16px] px-10 py-3 rounded-full hover:opacity-90 disabled:opacity-50"
 					>
 						{loading ? <Spinner label="logging in…" /> : "log in"}
 					</button>
-					<p className="text-[13px] text-tmuted mt-4 text-center">
+					<p className="text-[13px] text-white/70 mt-6">
 						no page yet?{" "}
-						<Link href="/start" className="text-taccent hover:underline">
+						<Link href="/start" className="text-white/80 underline hover:text-white">
 							make one
 						</Link>
 					</p>
-				</PostCard>
+				</div>
 			</main>
 		</div>
 	);
