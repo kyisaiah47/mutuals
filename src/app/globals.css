@@ -121,6 +121,76 @@
 	}
 }
 
+/* ===== Mutuals "tumblr" design tokens ===== */
+@theme {
+	--color-tnavy: #001935;
+	--color-tnavy-light: #0c2b4d;
+	--color-tcard: #ffffff;
+	--color-tink: #1a1a1a;
+	--color-tmuted: #7c8a97;
+	--color-tfaint: #b0b8bf;
+	--color-taccent: #ff6250;
+	--color-tgreen: #00cf35;
+	--color-tline: #e7e7e7;
+}
+
+@keyframes chip-pop {
+	from {
+		transform: scale(0.5) rotate(var(--rot, 0deg));
+		opacity: 0;
+	}
+	to {
+		transform: scale(1) rotate(var(--rot, 0deg));
+		opacity: 1;
+	}
+}
+@keyframes floaty {
+	0%,
+	100% {
+		transform: translateY(0) rotate(var(--rot, 0deg));
+	}
+	50% {
+		transform: translateY(-6px) rotate(var(--rot, 0deg));
+	}
+}
+@keyframes fadeup {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes pulse-logo {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.15);
+		opacity: 0.8;
+	}
+}
+.anim-chip {
+	animation: chip-pop 0.25s ease backwards, floaty 3.2s ease-in-out infinite 0.25s;
+}
+.anim-fadeup {
+	animation: fadeup 0.4s ease backwards;
+}
+.anim-pulse-logo {
+	animation: pulse-logo 1.6s ease-in-out infinite;
+}
+
+.t-page {
+	min-height: 100vh;
+	background: var(--color-tnavy);
+	color: #fff;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 /* Themed scrollbars to match the dark UI */
 * {
 	scrollbar-width: thin;
