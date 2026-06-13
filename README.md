@@ -1,12 +1,22 @@
 <div align="center">
 
+<img src="assets/banner.png" alt="banner" width="100%" />
+
 # mutuals
 
 **find people who love what you love**
 
 culture-centered reddit, with AI taste profiles for individuality
 
+[![Next.js](https://img.shields.io/badge/Next.js_15-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)](https://anthropic.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
 </div>
+
+<br/>
 
 Tell mutuals 8–10 things you love — bands, films, books, games, places — and it builds your page: an AI-written taste profile, a hand-drawn avatar you pick, and a room for every single thing. Each room is a tiny subreddit (m/radiohead, m/twinpeaks) with titled threads and comments, populated automatically by everyone who shares that thing. Matching runs on real taste overlap, and contact info only unlocks when two people wave at each other.
 
